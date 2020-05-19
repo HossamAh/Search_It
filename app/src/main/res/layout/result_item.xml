@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_margin="16dp">
+
+    <TextView
+            android:text="TextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:id="@+id/resultLink_textView"
+            android:autoLink="web"
+            android:linksClickable="true"
+            android:textColor="#3D3939"
+            android:layout_alignParentTop="true"/>
+    <TextView
+            android:text="TextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:id="@+id/ResultTitle_textView"
+            android:layout_below="@id/resultLink_textView" android:textSize="20sp" android:textColor="#0000FF"
+            android:textStyle="bold" android:layout_marginTop="8dp" android:layout_marginBottom="8dp"/>
+    <TextView
+            android:text="TextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:id="@+id/AboutResult_textView"
+            android:layout_below="@id/ResultTitle_textView" android:textColor="#8B8888" android:textSize="18sp"
+            android:layout_marginTop="8dp" android:layout_marginBottom="8dp"/>
+    <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:id="@+id/internalCategories_FrameLayout"
+            android:layout_below="@id/AboutResult_textView" android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp">
+
+    </FrameLayout>
+</RelativeLayout>
