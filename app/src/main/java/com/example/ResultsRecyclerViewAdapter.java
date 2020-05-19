@@ -1,4 +1,4 @@
-package com.example.search_it;
+package com.example;
 
 import android.content.Context;
 import android.content.Intent;
@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.example.search_it.R;
 import com.example.search_it.models.QueryResultItem;
 
 import java.util.ArrayList;

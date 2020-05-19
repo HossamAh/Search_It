@@ -1,9 +1,8 @@
-package com.example.search_it.models;
+package com.example.models;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import java.io.Serializable;
 import java.util.List;
 
 public class QueryResultItem implements Parcelable {

@@ -1,17 +1,17 @@
-package com.example.search_it;
+package com.example;
 
 import android.os.Bundle;
-import android.os.Parcelable;
 import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.example.search_it.R;
+import com.example.search_it.ResultsRecyclerViewAdapter;
 import com.example.search_it.models.QueryResultItem;
 
 import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -38,7 +38,7 @@ public class ResultsPageFragment extends Fragment  implements ResultsRecyclerVie
      * this fragment using the provided parameters.
      *
      * @param pagesList Parameter 1.
-     * @return A new instance of fragment ResultsPageFragment.
+     * @return A new instance of fragment com.example.ResultsPageFragment.
      */
     public static ResultsPageFragment newInstance(ArrayList<QueryResultItem> pagesList,ArrayList<String>QueryKeys) {
         ResultsPageFragment fragment = new ResultsPageFragment();
