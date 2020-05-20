@@ -10,8 +10,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.widget.SearchView;
 
+import org.apache.commons.lang3.StringUtils;
+import org.tartarus.snowball.ext.PorterStemmer;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -31,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     }
     @Override
     protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
         setIntent(intent);
         handleIntent(intent);
     }
@@ -80,8 +85,47 @@ public class MainActivity extends AppCompatActivity {
 
         String result = allWords.stream().collect(Collectors.joining(" "));
 
+        Stemmer S = new Stemmer();
+        String stemmed_query=S.stem(result);
         Intent intent = new Intent(this, QueryResult.class);
-        intent.putExtra("search_query", result);
+        intent.putExtra("search_query", stemmed_query);
         startActivity(intent);
     }
 }
+
+class Stemmer {
+
+    private final static String ILLEGAL_REGEX_PATTERN = "([^a-zA-Z0-9])|(\\b\\d{1}\\b)|(\\b\\w{1}\\b)";
+    private static HashMap<String, Integer> map = new HashMap<>();
+
+    public Stemmer(){
+        //LoadStopWords();
+    }
+
+    public String stem(String s){
+        StringBuilder stringBuilder = new StringBuilder();
+        for (String word : replaceIllegalCharacter(s).split(" "))
+        {
+            //  word = RemvoeStopWords(word);
+            String stemmedWord = stemPrivate(word);
+            if (StringUtils.isNotEmpty(stemmedWord)) {
+                if (stringBuilder.length() > 0)
+                    stringBuilder.append(' ');
+
+                stringBuilder.append(stemmedWord);
+            }
+        }
+        return (stringBuilder.toString());
+    }
+
+    private static String stemPrivate(String word)
+    {
+        PorterStemmer porterStemmer = new PorterStemmer();
+        porterStemmer.setCurrent(word);
+        porterStemmer.stem();
+        return porterStemmer.getCurrent();
+    }
+    private static String replaceIllegalCharacter(String string)
+    {
+        return string.replaceAll(ILLEGAL_REGEX_PATTERN, " ").replaceAll(" +", " ").trim().toLowerCase();
+    }}
