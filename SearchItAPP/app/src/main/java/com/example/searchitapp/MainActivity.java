@@ -78,6 +78,17 @@ public class MainActivity extends AppCompatActivity {
                 "yes","yet","you","you’d","you’ll","your","you’re","yours","yourself","yourselves","you’ve",
                 "zero","the", "and", "are", "is","i" , "he" ,"she" , "over" , "and", "it" , "will" , "be"
                 );
+        int firstIndexOfPhrase=-1;
+        firstIndexOfPhrase=query.indexOf('"');
+        int lastIndexOfPhrase=-1;
+        lastIndexOfPhrase=query.lastIndexOf('"');
+        String phrase="";
+        if(firstIndexOfPhrase!=-1&&lastIndexOfPhrase!=-1)
+        {
+            phrase=query.substring(firstIndexOfPhrase+1,lastIndexOfPhrase);
+            query=query.replace(phrase,"");
+            query=query.replace("\"","");
+        }
 
         ArrayList<String> allWords = Stream.of(query.toLowerCase().split(" "))
                         .collect(Collectors.toCollection(ArrayList<String>::new));
@@ -88,7 +99,9 @@ public class MainActivity extends AppCompatActivity {
         Stemmer S = new Stemmer();
         String stemmed_query=S.stem(result);
         Intent intent = new Intent(this, QueryResult.class);
-        intent.putExtra("search_query", stemmed_query);
+        if(!phrase.isEmpty())
+            intent.putExtra("search_query", stemmed_query+phrase);
+        else intent.putExtra("search_query", stemmed_query);
         startActivity(intent);
     }
 }
