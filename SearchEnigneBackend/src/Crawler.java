@@ -19,14 +19,34 @@ public class Crawler {
     private static int threadsNumber;
     private static boolean firstIterationCheck=false;
     private static HashSet<OutputDoc> crawlerOutput;
+    public static class image
+    {
+        String imageSrc;
+        String imageCaption;
+
+        public image(String imageSrc, String imageCaption) {
+            this.imageSrc = imageSrc;
+            this.imageCaption = imageCaption;
+        }
+    }
     public static class OutputDoc
     {
         URL url;
         Set<String> referencedLinks;
+        Set<image> referencedImages;
 
-        public OutputDoc(URL url, Set<String> referencedLinks) {
+        public OutputDoc(URL url, Set<String> referencedLinks, Set<image> referencedImages) {
             this.url = url;
             this.referencedLinks = referencedLinks;
+            this.referencedImages = referencedImages;
+        }
+
+        public Set<image> getReferencedImages() {
+            return referencedImages;
+        }
+
+        public void setReferencedImages(Set<image> referencedImages) {
+            this.referencedImages = referencedImages;
         }
 
         public URL getUrl() {
@@ -189,8 +209,23 @@ public class Crawler {
                 return;
             }
             Set<String> referencedLinks = new HashSet<>();
+            Set<image> referencedImages = new HashSet<>();
             int referencesNumber = 0;
             Elements Links = doc.select("a[href]");
+            Elements images = doc.select("img");
+            for (Element image : images)
+            {
+                String caption = image.attr("figcaption");
+                if(caption == "")
+                {
+                    caption = doc.title();}
+                String absoluteUrl = image.absUrl("src");  //absolute URL on src
+                System.out.println("image SRC:"+absoluteUrl);
+                System.out.println("image Caption:"+caption);
+
+                referencedImages.add(new image(absoluteUrl,caption));
+            }
+
             for (Element newLink : Links) {
                 if (pagescount.intValue() < PAGES_LIIMIT) {
                     String Link = newLink.attr("abs:href");
@@ -228,7 +263,7 @@ public class Crawler {
                 newSeed.add(new Link(link.toString(), referencesNumber));
             }
             synchronized (crawlerOutput) {
-                crawlerOutput.add(new OutputDoc(link, referencedLinks));
+                crawlerOutput.add(new OutputDoc(link, referencedLinks,referencedImages));
             }
             links.remove(link.toString());
             if (firstIterationCheck == true) {
