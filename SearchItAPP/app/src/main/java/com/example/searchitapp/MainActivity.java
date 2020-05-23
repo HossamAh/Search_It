@@ -108,13 +108,17 @@ public class MainActivity extends AppCompatActivity {
         //sending stemmed query to the server
         final  String IP="192.168.1.3";
         final  int port=7800;
-    Thread querySender =
+        String finalPhrase = phrase;
+        Thread querySender =
         new Thread(
                 () -> {
                   try {
                     Socket S1 = new Socket(String.valueOf(IP), port);
                     DataOutputStream DOS = new DataOutputStream(S1.getOutputStream());
-                    DOS.writeUTF(stemmed_query);
+                      if(!finalPhrase.isEmpty())
+                          DOS.writeUTF(stemmed_query+ finalPhrase);
+                      else DOS.writeUTF(stemmed_query);
+                   // DOS.writeUTF(stemmed_query);
                     DOS.flush();
                     DOS.close();
                     S1.close();
