@@ -8,10 +8,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.SearchRecentSuggestions;
 import android.widget.SearchView;
 
+import org.apache.commons.lang3.StringUtils;
+import org.tartarus.snowball.ext.PorterStemmer;
+
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -31,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     }
     @Override
     protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
         setIntent(intent);
         handleIntent(intent);
     }
@@ -39,6 +48,9 @@ public class MainActivity extends AppCompatActivity {
             String query = intent.getStringExtra(SearchManager.QUERY);
             // Do work using string
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this,
+                        MySuggestionProvider.AUTHORITY, MySuggestionProvider.MODE);
+                suggestions.saveRecentQuery(query, null);
                 processMyQuery(query);
             }
         }}
@@ -73,6 +85,17 @@ public class MainActivity extends AppCompatActivity {
                 "yes","yet","you","you’d","you’ll","your","you’re","yours","yourself","yourselves","you’ve",
                 "zero","the", "and", "are", "is","i" , "he" ,"she" , "over" , "and", "it" , "will" , "be"
                 );
+        int firstIndexOfPhrase=-1;
+        firstIndexOfPhrase=query.indexOf('"');
+        int lastIndexOfPhrase=-1;
+        lastIndexOfPhrase=query.lastIndexOf('"');
+        String phrase="";
+        if(firstIndexOfPhrase!=-1&&lastIndexOfPhrase!=-1)
+        {
+            phrase=query.substring(firstIndexOfPhrase+1,lastIndexOfPhrase);
+            query=query.replace(phrase,"");
+            query=query.replace("\"","");
+        }
 
         ArrayList<String> allWords = Stream.of(query.toLowerCase().split(" "))
                         .collect(Collectors.toCollection(ArrayList<String>::new));
@@ -80,8 +103,67 @@ public class MainActivity extends AppCompatActivity {
 
         String result = allWords.stream().collect(Collectors.joining(" "));
 
+        Stemmer S = new Stemmer();
+        String stemmed_query=S.stem(result);
+        //sending stemmed query to the server
+        final  String IP="192.168.1.3";
+        final  int port=7800;
+    Thread querySender =
+        new Thread(
+                () -> {
+                  try {
+                    Socket S1 = new Socket(String.valueOf(IP), port);
+                    DataOutputStream DOS = new DataOutputStream(S1.getOutputStream());
+                    DOS.writeUTF(stemmed_query);
+                    DOS.flush();
+                    DOS.close();
+                    S1.close();
+                  } catch (IOException e) {
+                    e.printStackTrace();
+                  }
+                });
+        querySender.start();
         Intent intent = new Intent(this, QueryResult.class);
-        intent.putExtra("search_query", result);
+        if(!phrase.isEmpty())
+            intent.putExtra("search_query", stemmed_query+phrase);
+        else intent.putExtra("search_query", stemmed_query);
         startActivity(intent);
     }
 }
+
+class Stemmer {
+
+    private final static String ILLEGAL_REGEX_PATTERN = "([^a-zA-Z0-9])|(\\b\\d{1}\\b)|(\\b\\w{1}\\b)";
+    private static HashMap<String, Integer> map = new HashMap<>();
+
+    public Stemmer(){
+        //LoadStopWords();
+    }
+
+    public String stem(String s){
+        StringBuilder stringBuilder = new StringBuilder();
+        for (String word : replaceIllegalCharacter(s).split(" "))
+        {
+            //  word = RemvoeStopWords(word);
+            String stemmedWord = stemPrivate(word);
+            if (StringUtils.isNotEmpty(stemmedWord)) {
+                if (stringBuilder.length() > 0)
+                    stringBuilder.append(' ');
+
+                stringBuilder.append(stemmedWord);
+            }
+        }
+        return (stringBuilder.toString());
+    }
+
+    private static String stemPrivate(String word)
+    {
+        PorterStemmer porterStemmer = new PorterStemmer();
+        porterStemmer.setCurrent(word);
+        porterStemmer.stem();
+        return porterStemmer.getCurrent();
+    }
+    private static String replaceIllegalCharacter(String string)
+    {
+        return string.replaceAll(ILLEGAL_REGEX_PATTERN, " ").replaceAll(" +", " ").trim().toLowerCase();
+    }}
