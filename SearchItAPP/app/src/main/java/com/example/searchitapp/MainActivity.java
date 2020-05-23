@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.SearchRecentSuggestions;
 import android.widget.SearchView;
 
 import org.apache.commons.lang3.StringUtils;
@@ -44,6 +45,9 @@ public class MainActivity extends AppCompatActivity {
             String query = intent.getStringExtra(SearchManager.QUERY);
             // Do work using string
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this,
+                        MySuggestionProvider.AUTHORITY, MySuggestionProvider.MODE);
+                suggestions.saveRecentQuery(query, null);
                 processMyQuery(query);
             }
         }}

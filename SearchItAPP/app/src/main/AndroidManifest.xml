@@ -27,6 +27,8 @@
                     android:name="android.app.searchable"
                     android:resource="@xml/searchable"/>
         </activity>
+        <provider android:name=".MySuggestionProvider"
+            android:authorities="com.example.searchitapp.MySuggestionProvider" />
     </application>
 
 </manifest>
