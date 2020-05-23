@@ -14,6 +14,9 @@ import android.widget.SearchView;
 import org.apache.commons.lang3.StringUtils;
 import org.tartarus.snowball.ext.PorterStemmer;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -102,6 +105,24 @@ public class MainActivity extends AppCompatActivity {
 
         Stemmer S = new Stemmer();
         String stemmed_query=S.stem(result);
+        //sending stemmed query to the server
+        final  String IP="192.168.1.3";
+        final  int port=7800;
+    Thread querySender =
+        new Thread(
+                () -> {
+                  try {
+                    Socket S1 = new Socket(String.valueOf(IP), port);
+                    DataOutputStream DOS = new DataOutputStream(S1.getOutputStream());
+                    DOS.writeUTF(stemmed_query);
+                    DOS.flush();
+                    DOS.close();
+                    S1.close();
+                  } catch (IOException e) {
+                    e.printStackTrace();
+                  }
+                });
+        querySender.start();
         Intent intent = new Intent(this, QueryResult.class);
         if(!phrase.isEmpty())
             intent.putExtra("search_query", stemmed_query+phrase);
