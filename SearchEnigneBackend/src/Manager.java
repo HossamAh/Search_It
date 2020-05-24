@@ -7,7 +7,8 @@ public class Manager {
     private static HashSet<Crawler.OutputDoc> crawlerOutput;
     public static void main(String[] arg) throws IOException, URISyntaxException, InterruptedException {
         crawlerOutput = new HashSet<>();
-        Crawler.CrawlerProcess(crawlerOutput);
+        Crawler crawler = new Crawler();
+        crawler.CrawlerProcess(crawlerOutput);
 
     }
 }

@@ -7,19 +7,24 @@ import org.jsoup.select.Elements;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 //Crawler name is Spider for testing the robots.txt file ,
 public class Crawler {
-    private  static final int PAGES_LIIMIT = 50;
-    private static HashSet<String> linksSet;
-    public static AtomicInteger pagescount;
-    private static Set<String> notAllowableURLs;
-    private static ArrayList<Thread> ThreadList;
-    private static int threadsNumber;
-    private static boolean firstIterationCheck=false;
-    private static HashSet<OutputDoc> crawlerOutput;
-    public static class image
+    private   final int PAGES_LIIMIT = 100;
+    private  HashSet<String> linksSet;
+    public  AtomicInteger pagescount;
+    public  ArrayList<Integer> LocksSet;
+    private  Set<String> notAllowableURLs;
+    private  ArrayList<Thread> ThreadList;
+    private ArrayList<ExecutorService> EXList;
+    private  int threadsNumber;
+    private  boolean firstIterationCheck=false;
+    private  HashSet<OutputDoc> crawlerOutput;
+    public  class image
     {
         String imageSrc;
         String imageCaption;
@@ -34,11 +39,13 @@ public class Crawler {
         URL url;
         Set<String> referencedLinks;
         Set<image> referencedImages;
+        Document doc;
 
-        public OutputDoc(URL url, Set<String> referencedLinks, Set<image> referencedImages) {
+        public OutputDoc(URL url, Set<String> referencedLinks, Set<image> referencedImages, Document doc) {
             this.url = url;
             this.referencedLinks = referencedLinks;
             this.referencedImages = referencedImages;
+            this.doc = doc;
         }
 
         public Set<image> getReferencedImages() {
@@ -67,7 +74,7 @@ public class Crawler {
     }
     //class that store link url string and the number of references in it ,
     // to determined whether to use it in the new iteration or not
-    public static class Link implements Comparable<Link>
+    public  class Link implements Comparable<Link>
     {
         String linkUrl;
         int referencesNumber;
@@ -87,8 +94,8 @@ public class Crawler {
             return 0;
         }
     }
-    private static PriorityQueue<Link> newSeed;
-    public static String Custom_Normalize(String Link) throws MalformedURLException {
+    private  PriorityQueue<Link> newSeed;
+    public  String Custom_Normalize(String Link) throws MalformedURLException {
         if(Link.endsWith("/"))
         {
             Link=Link.substring(0,Link.length()-1);
@@ -102,7 +109,7 @@ public class Crawler {
     }
 
     //function to get host url to check the host robot.txt file
-    public static URL normalizeURL(URL url) throws MalformedURLException {
+    public  URL normalizeURL(URL url) throws MalformedURLException {
         String link="";
         link+=url.getProtocol();
         link+="://";
@@ -110,7 +117,7 @@ public class Crawler {
         return new URL(link);
     }
     //check link to crawl according to host robots.txt
-    public static boolean checkLink(String Url)
+    public  boolean checkLink(String Url)
     {
         synchronized (notAllowableURLs) {
             for (String link :notAllowableURLs)
@@ -125,7 +132,7 @@ public class Crawler {
     }
     //function to parse robots.txt file and add not allowed to not allowable urls
     // and return if the robots.txt file has constraints to my crawler or not.
-    public static boolean parseRobotTxt(URL robotsTxtURL) throws IOException {
+    public  boolean parseRobotTxt(URL robotsTxtURL) throws IOException {
         notAllowableURLs.clear();
         URLConnection urlcon = robotsTxtURL.openConnection();
         InputStream stream = urlcon.getInputStream();
@@ -170,36 +177,40 @@ public class Crawler {
         return myConstraintsCheck;
     }
 
-    public static void Crawl(Set<String> links) throws MalformedURLException, InterruptedException {
-        while(!Thread.currentThread().isInterrupted()) {
-            if (links.size() < 1)
-                return;
-            while (!links.isEmpty()) {
+    public void Crawl(Set<String> links) throws MalformedURLException, InterruptedException {
 
-                if (pagescount.intValue() < PAGES_LIIMIT) {
-                    Iterator<String> itr = links.iterator();
-                    if (itr.hasNext()) {
-                        URL link = new URL(itr.next());
+        if (links.size() < 1)
+            return;
+        while (pagescount.intValue() < PAGES_LIIMIT) {
+            while (!links.isEmpty()){
+                Iterator<String> itr = links.iterator();
+                if (itr.hasNext()) {
+                    URL link = new URL(itr.next());
 
-                        try {
+                    try {
+                        if(pagescount.intValue()<PAGES_LIIMIT)
                             linksExtraction(link, links);
-                        } catch (Exception e) {
-                            links.remove(link.toString());
-                            linksSet.remove(link.toString());
-                            pagescount.decrementAndGet();
-                        }
+                        else return;
 
+                    } catch (Exception e) {
+                        links.remove(link.toString());
+                        if(pagescount.intValue()<PAGES_LIIMIT) {
+                            synchronized (linksSet) {
+                                linksSet.remove(link.toString());
+                                //pagescount.decrementAndGet();
+                            }
+                        }
+                        else return;
                     }
-                } else
-                    return;
+                }
             }
             Crawl(links);
+
         }
-        System.out.println("first cycle of Crawler is done, Thread " + Thread.currentThread().getName() + " is terminated");
         return;
     }
 
-    public static void linksExtraction(URL link,Set<String>links) throws IOException, URISyntaxException {
+    public  void linksExtraction(URL link,Set<String>links) throws IOException, URISyntaxException {
             Document doc;
             try {
                 doc = Jsoup.connect(link.toString()).get();
@@ -215,13 +226,13 @@ public class Crawler {
             Elements images = doc.select("img");
             for (Element image : images)
             {
-                String caption = image.attr("figcaption");
-                if(caption == "")
+                String caption = image.attr("alt");
+                if(caption == "" ||caption == "..." )
                 {
                     caption = doc.title();}
                 String absoluteUrl = image.absUrl("src");  //absolute URL on src
-                System.out.println("image SRC:"+absoluteUrl);
-                System.out.println("image Caption:"+caption);
+//                System.out.println("image SRC:"+absoluteUrl);
+//                System.out.println("image Caption:"+caption);
 
                 referencedImages.add(new image(absoluteUrl,caption));
             }
@@ -247,9 +258,13 @@ public class Crawler {
                                 continue;
                             }
                             referencedLinks.add(Link);
-                            synchronized (linksSet) {
-                                linksSet.add(Link);
+                            if(pagescount.intValue()<PAGES_LIIMIT)
+                            {
+                                synchronized (linksSet) {
+                                    linksSet.add(Link);
+                                }
                             }
+                            else return;
                             links.add(Link);
                             System.out.println(Link + "\n" + pagescount.intValue() + "#thread: " + Thread.currentThread().getName());
                             referencesNumber++;
@@ -263,7 +278,7 @@ public class Crawler {
                 newSeed.add(new Link(link.toString(), referencesNumber));
             }
             synchronized (crawlerOutput) {
-                crawlerOutput.add(new OutputDoc(link, referencedLinks,referencedImages));
+                crawlerOutput.add(new OutputDoc(link, referencedLinks,referencedImages,doc));
             }
             links.remove(link.toString());
             if (firstIterationCheck == true) {
@@ -272,13 +287,18 @@ public class Crawler {
             pagescount.incrementAndGet();
 
     }
-    public static void CrawlerProcess(HashSet<OutputDoc> CrawlerOutput) throws IOException, InterruptedException, URISyntaxException
+    public  void CrawlerProcess(HashSet<OutputDoc> CrawlerOutput) throws IOException, InterruptedException, URISyntaxException
     {
         pagescount  =new AtomicInteger(0);
+        LocksSet = new ArrayList();
         linksSet = new HashSet<String>();
         notAllowableURLs = new HashSet<>();
         Scanner scanner = new Scanner(System.in);
         threadsNumber = scanner.nextInt();
+        for(int i =0;i<threadsNumber;i++)
+        {
+            LocksSet.add(0);
+        }
         linksSet.add(new URI("https://dmoz-odp.org").normalize().toString());
         newSeed = new PriorityQueue<>();
         crawlerOutput = new HashSet<>();
@@ -299,7 +319,7 @@ public class Crawler {
 //
 //    }
 
-    public static void crawlingBase(Set<String> seedSet) throws IOException, URISyntaxException, InterruptedException {
+    public  void crawlingBase(Set<String> seedSet) throws IOException, URISyntaxException, InterruptedException {
         Iterator<String> itr;
         if(firstIterationCheck ==false && seedSet.size()<threadsNumber) {
             while (seedSet.size() < threadsNumber) {
@@ -329,24 +349,28 @@ public class Crawler {
             linksSets.add(tempSet);
         }
 
-        if (firstIterationCheck ==false)
-            ThreadList = new ArrayList<>();
-        else {
-            for (int i=0;i<threadsNumber;i++)
-            {
-                ThreadList.get(i).interrupt();
+        if (firstIterationCheck == false) {
+            EXList = new ArrayList<>();
+        }
+        else
+            EXList.clear();
 
+        ExecutorService es=null;
+        for (int i=0;i<threadsNumber-1;i++) {
+            es = Executors.newCachedThreadPool();
+            es.execute(new Extraction(linksSets.get(i)));
+            EXList.add(es);
+        }
+
+
+        while(pagescount.intValue()<PAGES_LIIMIT);
+        for (int i=0;i<threadsNumber-1;i++) {
+            synchronized (linksSets) {
+                linksSets.notifyAll();
             }
-            ThreadList.clear();
+            while(!es.isShutdown())
+                es.shutdownNow();
         }
-        for (int i=0;i<threadsNumber;i++) {
-            Thread t = new Thread(new Extraction(linksSets.get(i)));
-            t.start();
-            t.setName("#"+i);
-            ThreadList.add(t);
-        }
-        while(pagescount.intValue()<PAGES_LIIMIT){}
-
         firstIterationCheck = true;
         linksSet.clear();
         seedSet.clear();
@@ -354,7 +378,6 @@ public class Crawler {
             for (Link newlink : newSeed) {
                 if (newlink.referencesNumber > 10) {
                     seedSet.add(newlink.linkUrl);
-
                 }
             }
         }
@@ -366,10 +389,11 @@ public class Crawler {
         System.out.println("end of crawling iteration");
         if(seedSet.size()<1)
             seedSet.add((new URI("https://dmoz-odp.org").normalize().toString()));
-        pagescount.addAndGet(-1*pagescount.intValue());
+        pagescount.set(0);
+
         crawlingBase(seedSet);
     }
-    private static class Extraction extends Thread {
+    private  class Extraction implements Runnable {
         Set<String> links;
 
         public Extraction(Set<String> links) {
