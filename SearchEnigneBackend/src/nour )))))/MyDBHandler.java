@@ -1,12 +1,12 @@
 package com.example.search_it;
 
-//import android.content.ContentValues;
-//import android.content.Context;
-//import android.database.Cursor;
-//import android.database.SQLException;
-//import android.database.sqlite.SQLiteDatabase;
-//import android.database.sqlite.SQLiteOpenHelper;
-//import android.util.Log;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import javax.naming.Context;
 import java.sql.SQLException;
@@ -28,6 +28,10 @@ public class MyDBHandler<SQLiteDatabase> {
     public static final String COL_title = "title";
     public static final String COL_URL = "URL";
 	public static final String COL_pop = "popularity";
+
+    public static final String COL_single_word = "single_word";
+    public static final String COL_docs_count = "docs_count";
+
     //these are the corresponding indices
 //    public static final int INDEX_ID = 0;
 //    public static final int INDEX_CONTENT = INDEX_ID + 1;
@@ -41,6 +45,7 @@ public class MyDBHandler<SQLiteDatabase> {
     private static final String TABLE_NAME1 = "tbl_words";
     private static final String TABLE_NAME2 = "tbl_links";
     private static final String TABLE_NAME3 = "tbl_info";
+    private static final String TABLE_NAME4 = "tbl_word_count";
     private static final int DATABASE_VERSION = 1;
     private final Context mCtx;
 
@@ -65,6 +70,12 @@ public class MyDBHandler<SQLiteDatabase> {
                     COL_links + " TEXT, " +
                     "PRIMARY KEY(" + COL_pageID_links + "," + COL_links + ")" +");";
 
+    private static final String DATABASE_CREATE4 =
+            "CREATE TABLE if not exists " + TABLE_NAME4 + " ( " +
+                    COL_single_word + " TEXT, " +
+                    COL_docs_count + " INTEGER," +
+                    "PRIMARY KEY(" + COL_single_word + ")" +");";
+
     public MyDBHandler(Context ctx) {
         this.mCtx = ctx;
     }
@@ -79,9 +90,44 @@ public class MyDBHandler<SQLiteDatabase> {
             mDbHelper.close();
         }
     }
+    //------------------------------------------------------------------------------------
+    //--------------------------------------retrive word count in all documents------------
+    //--------------------------------------------------------------------------------------
+    public Cursor retrieveWordsCount(String word) {
+        mDbHelper = new DatabaseHelper(mCtx);
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
+        Cursor res =  db.rawQuery( "select * from "+ TABLE_NAME4+ " where "+COL_single_word+" = "+word, null );
+        res.moveToFirst();
+    }
+    //---------------------------------------------------------------------------------------------
+//-----------------------------------add a new word ---------------------------------------------
+//------------------------------------------------------------------------------------------------
+    public void addWordsCount(String word) {
 
-    //TODO implement the function createReminder() which take the name as the content of the reminder and boolean important...note that the id will be created for you automatically
+        Cursor data = db.rawQuery( "select * from "+ TABLE_NAME4+ " where "+COL_single_word+" = "+word, null );
+        data.moveToFirst()
+        if (data == null)
+        {
+            ContentValues values = new ContentValues();
+            values.put(COL_single_word, word);
+            values.put(COL_docs_count, 1);
+            mDb.insert(TABLE_NAME4,null, values);
+        }
+        else{
+            ContentValues values2 = new ContentValues();
+
+            Integer count = data.getInt((data.getColumnIndex(COL_docs_count)));
+            values2.put(COL_docs_count, count+1);
+            values2.put(COL_single_word, word);
+
+            mDb.update(TABLE_NAME4, values2,COL_single_word + "=?",word);
+
+        }
+
+    }
+
+    //////////////add page to the DB.
     public void createPage(testest p) {
         this.open();
         ContentValues values = new ContentValues();
@@ -95,9 +141,9 @@ public class MyDBHandler<SQLiteDatabase> {
         this.close();
     }
 
-
+    //////////////retrieve page's popularity.
     public void setPop(testest p) {
-        
+
 		this.open();
         ContentValues values = new ContentValues();
         values.put(COL_pop, p.getPop());
@@ -106,10 +152,10 @@ public class MyDBHandler<SQLiteDatabase> {
         mDb.update(TABLE_NAME1, values, COL_ID + " = ?",
                 new String[] { String.valueOf(p.getId()) });
         this.close();
-		
+
     }
 
-    //    //TODO implement the function fetchReminderById() to get a certain reminder given its id
+    //////////////retrieve page's info.
     public page retrivePage(String url) {
         mDbHelper = new DatabaseHelper(mCtx);
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
@@ -121,7 +167,17 @@ public class MyDBHandler<SQLiteDatabase> {
 //
 //
 
-    //TODO implement the function fetchAllReminders() which get all reminders
+    //////////////retrieve page's info.
+    public page retrivePageByID(int  id) {
+        mDbHelper = new DatabaseHelper(mCtx);
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+        Cursor res =  db.rawQuery( "select * from "+ TABLE_NAME1+ " where "+COL_ID+" = "+id, null );
+        res.moveToFirst();
+        testest p = new testest(res.getString(res.getColumnIndex(COL_URL)), res.getString(res.getColumnIndex(COL_title)));
+        return p;
+    }
+
+//////////////retrieve page's ID.
     public long retrieveID(String url) {
         mDbHelper = new DatabaseHelper(mCtx);
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
@@ -133,27 +189,64 @@ public class MyDBHandler<SQLiteDatabase> {
     }
 
     //
-//    //TODO implement the function updateReminder() to update a certain reminder
-    public void retrieveWords(String url) {
+/////////////retrieve words in specific page.
+    public Cursor retrieveWords(String url) {
         mDbHelper = new DatabaseHelper(mCtx);
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
         int id;
         id = (int)retrieveID(url);
         Cursor res =  db.rawQuery( "select * from "+ TABLE_NAME2+ " where "+COL_pageID+" = "+Integer.toString(id), null );
         res.moveToFirst();
+        return res;
+    }
+/////////////retrieve pages containing a specific word.
+    public List<testest> retrievePAgess(String word) {
+        mDbHelper = new DatabaseHelper(mCtx);
+        List<testest> tags = new ArrayList<testest>();
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+        int id;
+        //id = (int)retrieveID(url);
+        Cursor res =  db.rawQuery( "select "+COL_pageID + " from "+ TABLE_NAME2+ " where "+COL_word+" = "+word, null );
+        //res.moveToFirst();
+        if (res.moveToFirst()) {
+            do {
+                testest t = new testest();
+                t = retrivePageByID(res.getColumnIndex(COL_ID));
+                // adding to tags list
+                tags.add(t);
+            } while (res.moveToNext());
+        }
+        return tags;
+    }
+    /////////////retrieve pages containing a specific word.
+    public List<testest> retrievePAgess(String word) {
+        List<testest> tags = new ArrayList<testest>();
+        List<testest> pages = new ArrayList<testest>();
+        String[] arrOfStr = str.split(" ");
+        for (String a : arrOfStr){
+            pages = retrievePAgess(a);
+            for (int i = 0; i < pages.size(); i++) {
+                if(tags
+                    r=sum
+            }
+        }
+
+        return tags;
     }
 
-    //TODO implement the function deleteReminderById() to delete a certain reminder given its id
-    public void retrievelinks(String url) {
+
+    /////////////retrieve links in a specific page.
+    public Cursor retrievelinks(String url) {
         mDbHelper = new DatabaseHelper(mCtx);
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
         int id;
         id = (int)retrieveID(url);
         Cursor res =  db.rawQuery( "select * from "+ TABLE_NAME3+ " where "+COL_pageID_links+" = "+Integer.toString(id), null );
         res.moveToFirst();
+        return res;
     }
 
-    //    //TODO implement the function deleteAllReminders() to delete all reminders
+    /////////////add words to a page.
     public void addWords(int id, testest p) {
         this.open();
         ContentValues values = new ContentValues();
@@ -163,6 +256,7 @@ public class MyDBHandler<SQLiteDatabase> {
         s = p.getwords();
         Set<String> keys = s.keySet();
         for(String key: keys){
+            addWordsCount(key);
             values.put(COL_word, key);
             values.put(COL_pageID, id);
             values.put(COL_count, s.get(key));
@@ -171,7 +265,7 @@ public class MyDBHandler<SQLiteDatabase> {
         this.close();
     }
 
-    //TODO overloaded to take a reminder
+    /////////////add links to a page.
     public void addLinks(int id, testest p) {
 
         this.open();

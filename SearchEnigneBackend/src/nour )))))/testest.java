@@ -11,6 +11,7 @@ import org.tartarus.snowball.ext.PorterStemmer;
 public class testest {
 
     public String html;
+    public String title;
 	public int ID;
 	public Double pop;
     public String url;
@@ -48,6 +49,10 @@ public class testest {
         //this.url = url;
         this.words = new Hashtable<String, Integer>();
         this.links = new ArrayList<String>();
+    }
+    public testest(String url, String tit) {
+        this.title = tit;
+        this.url = url;
     }
     public void ExtractWords(String html) {
         Document doc = Jsoup.parse(html);
@@ -118,19 +123,19 @@ public class testest {
 	public void setPop(Double p){
         pop = p;
     }
-	
+
 	public int getID(){
         return ID;
     }
-	
+
 	public void setID(int id){
 		ID = id;
 	}
-	
+
 	public String getURL(){
 		return url;
 	}
-	
+
     public static void main(String[] args) throws IOException {
         testest t = new testest();
         t.ExtractWords("<html><head><title>a Sampling sontenting, is a stupid for being a fuck like zmalek is ugly Content</title></head>\"\n" +
