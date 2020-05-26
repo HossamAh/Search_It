@@ -11,6 +11,7 @@ import org.tartarus.snowball.ext.PorterStemmer;
 public class testest {
 
     public String html;
+    public String title;
 	public int ID;
 	public Double pop;
     public String url;
@@ -48,6 +49,10 @@ public class testest {
         //this.url = url;
         this.words = new Hashtable<String, Integer>();
         this.links = new ArrayList<String>();
+    }
+    public testest(String url, String tit) {
+        this.title = tit;
+        this.url = url;
     }
     public void ExtractWords(String html) {
         Document doc = Jsoup.parse(html);
