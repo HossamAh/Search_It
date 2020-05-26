@@ -9,7 +9,10 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.SearchRecentSuggestions;
+import android.view.View;
+import android.widget.Button;
 import android.widget.SearchView;
+import android.widget.Toast;
 
 import org.apache.commons.lang3.StringUtils;
 import org.tartarus.snowball.ext.PorterStemmer;
@@ -25,6 +28,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class MainActivity extends AppCompatActivity {
+    SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this,
+            MySuggestionProvider.AUTHORITY, MySuggestionProvider.MODE);
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,21 +40,25 @@ public class MainActivity extends AppCompatActivity {
         mainSearchView.setQueryHint("type your query!");
         mainSearchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
         Intent intent = getIntent();
-        handleIntent(intent);
+        Button del_suggestions=findViewById(R.id.delete_sugg);
+        del_suggestions.setOnClickListener(view -> {
+            suggestions.clearHistory();
+        });
+        handleIntent(intent,suggestions);
     }
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        handleIntent(intent);
+        handleIntent(intent,suggestions);
     }
-    private void handleIntent(Intent intent) {
+    private void handleIntent(Intent intent,SearchRecentSuggestions suggestions) {
+
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
             // Do work using string
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this,
-                        MySuggestionProvider.AUTHORITY, MySuggestionProvider.MODE);
+
                 suggestions.saveRecentQuery(query, null);
                 processMyQuery(query);
             }
