@@ -143,7 +143,7 @@ public class MyDBHandler<SQLiteDatabase> {
 
     //////////////retrieve page's popularity.
     public void setPop(testest p) {
-        
+
 		this.open();
         ContentValues values = new ContentValues();
         values.put(COL_pop, p.getPop());
@@ -152,7 +152,7 @@ public class MyDBHandler<SQLiteDatabase> {
         mDb.update(TABLE_NAME1, values, COL_ID + " = ?",
                 new String[] { String.valueOf(p.getId()) });
         this.close();
-		
+
     }
 
     //////////////retrieve page's info.
