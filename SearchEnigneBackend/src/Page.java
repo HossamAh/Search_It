@@ -8,14 +8,15 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.tartarus.snowball.ext.PorterStemmer;
 
-public class testest {
+public class Page {
 
-    public String html;
+    public Document doc;
     public String title;
-	public int ID;
-	public Double pop;
+    public int ID;
+    public Double pop;
     public String url;
     public ArrayList<String> links ;
+    public Set<Crawler.image> referencedImages;
     public Hashtable<String, Integer> words ;
     static public List<String> stopwords = Arrays.asList("abroad", "according", "accordingly", "across", "actually", "adj", "after", "afterwards", "again", "against", "ago", "ahead", "ain’t", "all", "allow", "allows",
             "almost", "alone", "along", "alongside", "already", "also", "although", "always", "am", "amid", "amidst", "among", "amongst","a", "an", "and", "another", "any", "anybody", "anyhow", "anyone", "anything", "anyway", "anyways", "anywhere", "apart", "appear", "appreciate", "appropriate", "are", "aren’t", "around", "as", "a’s", "aside", "ask", "asking", "associated", "at", "available", "away", "awfully",
@@ -43,19 +44,18 @@ public class testest {
             "zero","the", "and", "are", "is","i" , "he" ,"she" , "over" , "and", "it" , "will" , "be"
     );
 
-    public testest() {
+    public Page(Document doc, String urll) {
         //this.hash = new Hashtable<String, Integer >();
-        //this.html = name;
-        //this.url = url;
+        this.doc = doc;
+        this.url = urll;
         this.words = new Hashtable<String, Integer>();
         this.links = new ArrayList<String>();
     }
-    public testest(String url, String tit) {
+    public Page(String url, String tit) {
         this.title = tit;
         this.url = url;
     }
-    public void ExtractWords(String html) {
-        Document doc = Jsoup.parse(html);
+    public void ExtractWords() {
         String text = doc.title();
         System.out.println("after removing stop words "+text);
         ///////////////////////////////////stop words////////////////////////////////////
@@ -102,8 +102,7 @@ public class testest {
             }
         }
     }
-    public void Extractlinks(String html) {
-        Document doc = Jsoup.parse(html);
+    public void Extractlinks() {
         Elements lins = doc.select("a[href]");
         for (Element link : lins) {
             links.add(link.attr("href"));
@@ -116,57 +115,57 @@ public class testest {
         return words;
     }
 
-	public Double getPop(){
+    public void setLinks(ArrayList<String> l){this.links = l;}
+    public void setwords(Hashtable<String, Integer> w){this.words = w;}
+
+    public Double getPop(){
         return pop;
     }
 
-	public void setPop(Double p){
+    public void setPop(Double p){
         pop = p;
     }
 
-	public int getID(){
+    public int getID(){
         return ID;
     }
 
-	public void setID(int id){
-		ID = id;
-	}
+    public void setID(int id){
+        ID = id;
+    }
 
-	public String getURL(){
-		return url;
-	}
+    public String getURL(){
+        return url;
+    }
 
-    public static void main(String[] args) throws IOException {
-        testest t = new testest();
-        t.ExtractWords("<html><head><title>a Sampling sontenting, is a stupid for being a fuck like zmalek is ugly Content</title></head>\"\n" +
-                "//                + \"<body>\"\n" +
-                "//                + \"<p>a Sampling sontenting, is a stupid for being a fuck like zmalek is ugly Content</p>\"\n" +
-                "//                + \"<div id='sampleDiv'><a href='www.google.com'>Google</a>\"\n" +
-                "//                + \"<div id='sampleDiv'><a href='www.google.com'>Google</a>\"\n" +
-                "//                + \"<div id='sampleDiv'><a href='www.google.com'>Google</a>\"\n" +
-                "//                + \"<h3><a>Sample</a><h3>\"\n" +
-                "//                +\"</div>\"\n" +
-                "//                +\"</body></html>");
+    public String gettitle(){
+        return title;
+    }
 
-        t.Extractlinks("<html><head><title>Sampling a Title</title></head>\"\n" +
-                "//                + \"<body>\"\n" +
-                "//                + \"<p>a Sampling sontenting, is a stupid for being a fuck like zmalek is ugly Content</p>\"\n" +
-                "//                + \"<div id='sampleDiv'><a href='www.google.com'>Google</a>\"\n" +
-                "//                + \"<div id='sampleDiv'><a href='www.google.com'>Google</a>\"\n" +
-                "//                + \"<div id='sampleDiv'><a href='www.google.com'>Google</a>\"\n" +
-                "//                + \"<h3><a>Sample</a><h3>\"\n" +
-                "//                +\"</div>\"\n" +
-                "//                +\"</body></html>");
-        ArrayList <String>linkat = new ArrayList <String>();
-        Hashtable <String,Integer> wordat = new Hashtable <String,Integer>();
-        linkat = t.getLinks();
-        wordat = t.getwords();
-        for (int i=0; i<linkat.size();i++){
-            System.out.println("linkaat" + linkat.get(i));
-        }
-        Set<String> keys = wordat.keySet();
-        for(String key: keys){
-            System.out.println("Value of "+key+" is: "+wordat.get(key));
+    public Set<Crawler.image> getImages(){
+        return referencedImages;
+    }
+
+    public void setImages(Set<Crawler.image> images){
+        referencedImages = images;
+    }
+
+    public static class manageDB{
+        public static SQLiteJDBC DB;
+        public static void docProcess(HashSet<Crawler.OutputDoc> crawlerOutput){
+            Iterator<Crawler.OutputDoc> itr = crawlerOutput.iterator();
+            itr.next().getUrl();
+            synchronized (crawlerOutput) {
+                while(itr.hasNext())
+                {
+                    Page t = new Page(itr.next().doc, itr.next().getUrl().toString());
+                    t.setImages(itr.next().referencedImages);
+                    t.ExtractWords();
+                    t.Extractlinks();
+                    DB.createPage(t);
+                }
+            }
         }
     }
+
 }
