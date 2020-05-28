@@ -1,10 +1,7 @@
 package com.example.search_it;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
-import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
@@ -27,7 +24,7 @@ public class MyDBHandler<SQLiteDatabase> {
     public static final String COL_ID = "ID";
     public static final String COL_title = "title";
     public static final String COL_URL = "URL";
-	public static final String COL_pop = "popularity";
+    public static final String COL_pop = "popularity";
 
     public static final String COL_single_word = "single_word";
     public static final String COL_docs_count = "docs_count";
@@ -54,7 +51,7 @@ public class MyDBHandler<SQLiteDatabase> {
             "CREATE TABLE if not exists " + TABLE_NAME1 + " ( " +
                     COL_ID + " INTEGER PRIMARY KEY autoincrement, " +
                     COL_title + " TEXT, " +
-					COL_pop + " REAL, " +
+                    COL_pop + " REAL, " +
                     COL_URL + " TEXT );";
 
     private static final String DATABASE_CREATE2 =
@@ -62,34 +59,37 @@ public class MyDBHandler<SQLiteDatabase> {
                     COL_pageID + " INTEGER , " +
                     COL_word + " TEXT, " +
                     COL_count + " INTEGER," +
-                    "PRIMARY KEY(" + COL_pageID + "," + COL_word + ")" +");";
+                    "PRIMARY KEY(" + COL_pageID + "," + COL_word + ")" + ");";
 
     private static final String DATABASE_CREATE3 =
             "CREATE TABLE if not exists " + TABLE_NAME3 + " ( " +
                     COL_pageID_links + " INTEGER , " +
                     COL_links + " TEXT, " +
-                    "PRIMARY KEY(" + COL_pageID_links + "," + COL_links + ")" +");";
+                    "PRIMARY KEY(" + COL_pageID_links + "," + COL_links + ")" + ");";
 
     private static final String DATABASE_CREATE4 =
             "CREATE TABLE if not exists " + TABLE_NAME4 + " ( " +
                     COL_single_word + " TEXT, " +
                     COL_docs_count + " INTEGER," +
-                    "PRIMARY KEY(" + COL_single_word + ")" +");";
+                    "PRIMARY KEY(" + COL_single_word + ")" + ");";
 
     public MyDBHandler(Context ctx) {
         this.mCtx = ctx;
     }
+
     //open
     public void open() throws SQLException {
         mDbHelper = new DatabaseHelper(mCtx);
         mDb = mDbHelper.getWritableDatabase();
     }
+
     //close
     public void close() {
         if (mDbHelper != null) {
             mDbHelper.close();
         }
     }
+
     //------------------------------------------------------------------------------------
     //--------------------------------------retrive word count in all documents------------
     //--------------------------------------------------------------------------------------
@@ -97,31 +97,30 @@ public class MyDBHandler<SQLiteDatabase> {
         mDbHelper = new DatabaseHelper(mCtx);
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
-        Cursor res =  db.rawQuery( "select * from "+ TABLE_NAME4+ " where "+COL_single_word+" = "+word, null );
+        Cursor res = db.rawQuery("select * from " + TABLE_NAME4 + " where " + COL_single_word + " = " + word, null);
         res.moveToFirst();
     }
+
     //---------------------------------------------------------------------------------------------
 //-----------------------------------add a new word ---------------------------------------------
 //------------------------------------------------------------------------------------------------
     public void addWordsCount(String word) {
 
-        Cursor data = db.rawQuery( "select * from "+ TABLE_NAME4+ " where "+COL_single_word+" = "+word, null );
+        Cursor data = db.rawQuery("select * from " + TABLE_NAME4 + " where " + COL_single_word + " = " + word, null);
         data.moveToFirst()
-        if (data == null)
-        {
+        if (data == null) {
             ContentValues values = new ContentValues();
             values.put(COL_single_word, word);
             values.put(COL_docs_count, 1);
-            mDb.insert(TABLE_NAME4,null, values);
-        }
-        else{
+            mDb.insert(TABLE_NAME4, null, values);
+        } else {
             ContentValues values2 = new ContentValues();
 
             Integer count = data.getInt((data.getColumnIndex(COL_docs_count)));
-            values2.put(COL_docs_count, count+1);
+            values2.put(COL_docs_count, count + 1);
             values2.put(COL_single_word, word);
 
-            mDb.update(TABLE_NAME4, values2,COL_single_word + "=?",word);
+            mDb.update(TABLE_NAME4, values2, COL_single_word + "=?", word);
 
         }
 
@@ -136,21 +135,21 @@ public class MyDBHandler<SQLiteDatabase> {
 
         long ID = mDb.insert(TABLE_NAME1, null, values);
 
-        addLinks((int)ID,p);
-        addWords((int)ID,p);
+        addLinks((int) ID, p);
+        addWords((int) ID, p);
         this.close();
     }
 
     //////////////retrieve page's popularity.
     public void setPop(testest p) {
 
-		this.open();
+        this.open();
         ContentValues values = new ContentValues();
         values.put(COL_pop, p.getPop());
 
         // updating row
         mDb.update(TABLE_NAME1, values, COL_ID + " = ?",
-                new String[] { String.valueOf(p.getId()) });
+                new String[]{String.valueOf(p.getId())});
         this.close();
 
     }
@@ -159,7 +158,7 @@ public class MyDBHandler<SQLiteDatabase> {
     public page retrivePage(String url) {
         mDbHelper = new DatabaseHelper(mCtx);
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
-        Cursor res =  db.rawQuery( "select * from "+ TABLE_NAME1+ " where "+COL_URL+" = "+url, null );
+        Cursor res = db.rawQuery("select * from " + TABLE_NAME1 + " where " + COL_URL + " = " + url, null);
         res.moveToFirst();
         testest p = new testest(res.getString(res.getColumnIndex(COL_URL)), res.getString(res.getColumnIndex(COL_title)));
         return p;
@@ -168,20 +167,20 @@ public class MyDBHandler<SQLiteDatabase> {
 //
 
     //////////////retrieve page's info.
-    public page retrivePageByID(int  id) {
+    public page retrivePageByID(int id) {
         mDbHelper = new DatabaseHelper(mCtx);
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
-        Cursor res =  db.rawQuery( "select * from "+ TABLE_NAME1+ " where "+COL_ID+" = "+id, null );
+        Cursor res = db.rawQuery("select * from " + TABLE_NAME1 + " where " + COL_ID + " = " + id, null);
         res.moveToFirst();
         testest p = new testest(res.getString(res.getColumnIndex(COL_URL)), res.getString(res.getColumnIndex(COL_title)));
         return p;
     }
 
-//////////////retrieve page's ID.
+    //////////////retrieve page's ID.
     public long retrieveID(String url) {
         mDbHelper = new DatabaseHelper(mCtx);
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
-        Cursor res =  db.rawQuery( "select * from "+ TABLE_NAME1+ " where "+COL_URL+" = "+url, null );
+        Cursor res = db.rawQuery("select * from " + TABLE_NAME1 + " where " + COL_URL + " = " + url, null);
         res.moveToFirst();
         long id = res.getInt((res.getColumnIndex(COL_ID)));
 //        Cursor res =  db.rawQuery( "select * from "+ TABLE_NAME2+ " where "+COL_ID+" = "+Integer.toString(id), null );
@@ -194,19 +193,20 @@ public class MyDBHandler<SQLiteDatabase> {
         mDbHelper = new DatabaseHelper(mCtx);
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
         int id;
-        id = (int)retrieveID(url);
-        Cursor res =  db.rawQuery( "select * from "+ TABLE_NAME2+ " where "+COL_pageID+" = "+Integer.toString(id), null );
+        id = (int) retrieveID(url);
+        Cursor res = db.rawQuery("select * from " + TABLE_NAME2 + " where " + COL_pageID + " = " + Integer.toString(id), null);
         res.moveToFirst();
         return res;
     }
-/////////////retrieve pages containing a specific word.
+
+    /////////////retrieve pages containing a specific word.
     public List<testest> retrievePAgess(String word) {
         mDbHelper = new DatabaseHelper(mCtx);
         List<testest> tags = new ArrayList<testest>();
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
         int id;
         //id = (int)retrieveID(url);
-        Cursor res =  db.rawQuery( "select "+COL_pageID + " from "+ TABLE_NAME2+ " where "+COL_word+" = "+word, null );
+        Cursor res = db.rawQuery("select " + COL_pageID + " from " + TABLE_NAME2 + " where " + COL_word + " = " + word, null);
         //res.moveToFirst();
         if (res.moveToFirst()) {
             do {
@@ -218,16 +218,17 @@ public class MyDBHandler<SQLiteDatabase> {
         }
         return tags;
     }
+
     /////////////retrieve pages containing a specific word.
     public List<testest> retrievePAgess(String word) {
         List<testest> tags = new ArrayList<testest>();
         List<testest> pages = new ArrayList<testest>();
         String[] arrOfStr = str.split(" ");
-        for (String a : arrOfStr){
+        for (String a : arrOfStr) {
             pages = retrievePAgess(a);
             for (int i = 0; i < pages.size(); i++) {
-                if(tags
-                    r=sum
+                if (tags
+                r = sum
             }
         }
 
@@ -240,8 +241,8 @@ public class MyDBHandler<SQLiteDatabase> {
         mDbHelper = new DatabaseHelper(mCtx);
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
         int id;
-        id = (int)retrieveID(url);
-        Cursor res =  db.rawQuery( "select * from "+ TABLE_NAME3+ " where "+COL_pageID_links+" = "+Integer.toString(id), null );
+        id = (int) retrieveID(url);
+        Cursor res = db.rawQuery("select * from " + TABLE_NAME3 + " where " + COL_pageID_links + " = " + Integer.toString(id), null);
         res.moveToFirst();
         return res;
     }
@@ -251,16 +252,16 @@ public class MyDBHandler<SQLiteDatabase> {
         this.open();
         ContentValues values = new ContentValues();
 
-        Hashtable<String,Integer> s = new Hashtable<String,Integer>();
+        Hashtable<String, Integer> s = new Hashtable<String, Integer>();
 
         s = p.getwords();
         Set<String> keys = s.keySet();
-        for(String key: keys){
+        for (String key : keys) {
             addWordsCount(key);
             values.put(COL_word, key);
             values.put(COL_pageID, id);
             values.put(COL_count, s.get(key));
-            mDb.insert(TABLE_NAME2,null, values);
+            mDb.insert(TABLE_NAME2, null, values);
         }
         this.close();
     }
@@ -270,14 +271,14 @@ public class MyDBHandler<SQLiteDatabase> {
 
         this.open();
         ContentValues values = new ContentValues();
-        ArrayList <String>linkat = new ArrayList <String>();
+        ArrayList<String> linkat = new ArrayList<String>();
 
         linkat = p.getLinks();
 
-        for (int i=0; i<linkat.size();i++){
+        for (int i = 0; i < linkat.size(); i++) {
             values.put(COL_pageID_links, id);
             values.put(COL_links, linkat.get(i));
-            mDb.insert(TABLE_NAME2,null, values);
+            mDb.insert(TABLE_NAME2, null, values);
         }
         this.close();
     }

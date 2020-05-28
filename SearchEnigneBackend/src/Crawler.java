@@ -23,7 +23,7 @@ public class Crawler {
     private ArrayList<ExecutorService> EXList;
     private  int threadsNumber;
     private  boolean firstIterationCheck=false;
-    private  HashSet<OutputDoc> crawlerOutput;
+    public  HashSet<OutputDoc> crawlerOutput;
     public  class image
     {
         String imageSrc;
@@ -266,7 +266,7 @@ public class Crawler {
                             }
                             else return;
                             links.add(Link);
-                            System.out.println(Link + "\n" + pagescount.intValue() + "#thread: " + Thread.currentThread().getName());
+                            //System.out.println(Link + "\n" + pagescount.intValue() + "#thread: " + Thread.currentThread().getName());
                             referencesNumber++;
                         }
                     }
@@ -287,14 +287,15 @@ public class Crawler {
             pagescount.incrementAndGet();
 
     }
-    public  void CrawlerProcess(HashSet<OutputDoc> CrawlerOutput) throws IOException, InterruptedException, URISyntaxException
+    public  void CrawlerProcess(int threads ) throws IOException, InterruptedException, URISyntaxException
     {
         pagescount  =new AtomicInteger(0);
         LocksSet = new ArrayList();
         linksSet = new HashSet<String>();
         notAllowableURLs = new HashSet<>();
-        Scanner scanner = new Scanner(System.in);
-        threadsNumber = scanner.nextInt();
+//        Scanner scanner = new Scanner(System.in);
+//        threadsNumber = scanner.nextInt();
+        threadsNumber = threads;
         for(int i =0;i<threadsNumber;i++)
         {
             LocksSet.add(0);
@@ -382,9 +383,10 @@ public class Crawler {
             }
         }
         newSeed.clear();
-        synchronized (crawlerOutput) {
-            crawlerOutput.clear();
-        }
+        //clear crawler output is done by other process after processing on the link.
+//        synchronized (crawlerOutput) {
+//            crawlerOutput.clear();
+//        }
 
         System.out.println("end of crawling iteration");
         if(seedSet.size()<1)

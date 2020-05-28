@@ -1,0 +1,29 @@
+<component name="libraryTable">
+  <library name="de.julielab:jcore-lingpipe-porterstemmer-ae:2.5.0" type="repository">
+    <properties maven-id="de.julielab:jcore-lingpipe-porterstemmer-ae:2.5.0" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/jcore-lingpipe-porterstemmer-ae-2.5.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jcore-types-2.5.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/aliasi-lingpipe-4.1.2-JL1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/slf4j-api-1.7.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/uimaj-core-2.10.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jaxb-api-2.3.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/javax.activation-api-1.2.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jaxb-core-2.3.0.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jaxb-impl-2.3.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/javax.annotation-api-1.3.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/uimafit-core-2.5.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/commons-lang-2.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/commons-io-2.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/commons-logging-api-1.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spring-core-4.3.26.RELEASE.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/commons-logging-1.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spring-context-4.3.26.RELEASE.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spring-aop-4.3.26.RELEASE.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spring-expression-4.3.26.RELEASE.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spring-beans-4.3.26.RELEASE.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
