@@ -136,7 +136,8 @@ public class MainActivity extends AppCompatActivity {
                   }
                 });
         querySender.start();
-        Intent intent = new Intent(this, QueryResult.class);
+        //Intent intent = new Intent(this, QueryResult.class);
+        Intent intent = new Intent(this, imageResult.class);
         if(!phrase.isEmpty())
             intent.putExtra("search_query", stemmed_query+phrase);
         else intent.putExtra("search_query", stemmed_query);
