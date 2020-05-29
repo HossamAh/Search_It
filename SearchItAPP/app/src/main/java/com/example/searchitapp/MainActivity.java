@@ -133,8 +133,8 @@ public class MainActivity extends AppCompatActivity {
                     Socket S1 = new Socket(String.valueOf(IP), port);
                     DataOutputStream DOS = new DataOutputStream(S1.getOutputStream());
                       if(!finalPhrase.isEmpty())
-                          DOS.writeUTF(stemmed_query+ finalPhrase+ finalImgSearch);
-                      else DOS.writeUTF(stemmed_query+finalImgSearch);
+                          DOS.writeUTF(stemmed_query+ finalPhrase+"@phrase"+finalImgSearch);
+                      else DOS.writeUTF(stemmed_query+"@non"+finalImgSearch);
                    // DOS.writeUTF(stemmed_query);
                     DOS.flush();
                     DOS.close();
