@@ -15,14 +15,14 @@
             android:text="TextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" android:id="@+id/ResultTitle_textView"
-            android:layout_below="@id/resultLink_textView" android:textSize="20sp" android:textColor="#0000FF"
-            android:textStyle="bold" android:layout_marginTop="8dp" android:layout_marginBottom="8dp"/>
+            android:layout_below="@id/resultLink_textView" android:textSize="20sp" android:textColor="#2828B0"
+            android:textStyle="bold" android:layout_marginTop="4dp" android:layout_marginBottom="8dp"/>
     <TextView
             android:text="TextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" android:id="@+id/AboutResult_textView"
-            android:layout_below="@id/ResultTitle_textView" android:textColor="#8B8888" android:textSize="18sp"
-            android:layout_marginTop="8dp" android:layout_marginBottom="8dp"/>
+            android:layout_below="@id/ResultTitle_textView" android:textColor="#8B8888" android:textSize="14sp"
+            android:layout_marginTop="4dp" android:layout_marginBottom="8dp"/>
     <FrameLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" android:id="@+id/internalCategories_FrameLayout"

@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.searchitapp.models.QueryResultItem;
@@ -67,6 +68,7 @@ public class ResultsPageFragment extends Fragment  implements ResultsRecyclerVie
         ResultRecyclerView.setLayoutManager(new LinearLayoutManager(getContext().getApplicationContext()));
         ResultsAdapter = new ResultsRecyclerViewAdapter(ResultsList,QueryKeys,getContext().getApplicationContext(),this);
         ResultRecyclerView.setAdapter(ResultsAdapter);
+        ResultRecyclerView.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
         return view;
     }
 

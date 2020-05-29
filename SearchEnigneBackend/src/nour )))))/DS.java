@@ -1,3 +1,4 @@
+
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Set;
@@ -11,7 +12,7 @@ public class DS {
         this.hashDocs = new Hashtable<String, ArrayList>();
     }
 
-    public void add(testest t) {
+    public void add(Page t) {
         Hashtable<String, Integer> wordat = new Hashtable<String, Integer>();
         wordat = t.getwords();
         int j;

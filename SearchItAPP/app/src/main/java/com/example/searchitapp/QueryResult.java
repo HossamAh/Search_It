@@ -1,5 +1,6 @@
 package com.example.searchitapp;
 
+import android.content.Intent;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -42,11 +43,11 @@ public class QueryResult extends AppCompatActivity{
 
 
         QueryResultItem ResultItem1 =new QueryResultItem(0,"Facebook|Login or sign up",
-                "https://www.facebook.com/","facebook about",null,null);
+                "https://www.facebook.com/","facebook about About FACEBOOK",null,null);
         QueryResultItem ResultItem2 =new QueryResultItem(0,"Twitter|Login or sign up",
-                "https://www.twitter.com/","twitter about",null,null);
+                "https://www.twitter.com/","twitter about twitter again",null,null);
         QueryResultItem ResultItem3 =new QueryResultItem(0,"Instagram|Login or sign up",
-                "https://www.Instagram.com/","instagram about",null,null);
+                "https://www.Instagram.com/","instagram about instagram again",null,null);
         for(int i=0;i<10;i++)
             ResultsList.add(ResultItem1);
         for(int i=0;i<10;i++)
@@ -125,4 +126,9 @@ public class QueryResult extends AppCompatActivity{
         });
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        startActivity(new Intent(this,MainActivity.class));
+    }
 }
