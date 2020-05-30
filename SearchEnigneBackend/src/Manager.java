@@ -33,7 +33,7 @@ public class Manager {
                         if (crawlerOutput.size() > 0) {
                             synchronized (crawler.crawlerOutput) {
                                 for (Crawler.OutputDoc output : crawlerOutput) {
-                                    System.out.println(output.url);
+                                    DB.docProcess(output);
                                     crawlerOutput.remove(output);
                                 }
                             }

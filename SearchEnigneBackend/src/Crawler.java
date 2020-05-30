@@ -24,7 +24,7 @@ public class Crawler {
     private  int threadsNumber;
     private  boolean firstIterationCheck=false;
     public  HashSet<OutputDoc> crawlerOutput;
-    public  class image
+    public static class image
     {
         String imageSrc;
         String imageCaption;
