@@ -1,4 +1,8 @@
 import javax.print.DocFlavor;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.sql.*;
 import java.util.*;
 
@@ -126,7 +130,7 @@ public class SQLiteJDBC {
                 pstmt.executeUpdate();
             }
             Set<Crawler.image> images = new HashSet<Crawler.image>();
-            images = p.getImages();
+            //images = p.getImages();
             for (Crawler.image img : images) {
                 sql ="INSERT INTO " + TABLE_NAME5 + " (" + COL_pageID_image + "," + COL_Caption + "," + COL_ABSurl + ") " +
                         "VALUES (?, ?, ?);";
@@ -423,7 +427,7 @@ public class SQLiteJDBC {
     }
 
     /////////////retrieve pages containing a specific set of words.
-    public List<Page> retrievePagesSetWords(String words) {
+    public List<Page> retrievePagesSetWords(String words) throws IOException {
         List<Page> pages = new ArrayList<Page>();
         List<Page> retrievedPages;
         boolean found = false;
@@ -438,13 +442,28 @@ public class SQLiteJDBC {
                     }
                 }
                 if (!found) {
-                    retrievedPages.get(i).setImages(retriveImages(retrievedPages.get(i).getID()));
+                    //retrievedPages.get(i).setImages(retriveImages(retrievedPages.get(i).getID()));
                     retrievedPages.get(i).setLinks(retrieveAllLinks(retrievedPages.get(i).getID()));
                     retrievedPages.get(i).setwords(retrieveWords(retrievedPages.get(i).getID(), words));
                     pages.add(retrievedPages.get(i));
+                    //retrievedPages.get(i);
                 }
             }
         }
+        Page.printPages(pages);
+        // Server will be started on 1700 port number
+        ServerSocket server=new ServerSocket(1700);
+
+        // Server listening for connection
+        Socket s=server.accept();
+
+        // Stream object for sending object
+        ObjectOutputStream os=new ObjectOutputStream(s.getOutputStream());
+
+
+        os.writeObject(pages);
+        System.out.println("hello it's me");
+        s.close();
         return pages;
     }
 
@@ -489,7 +508,7 @@ public class SQLiteJDBC {
                     }
                 }
                 if (!found) {
-                    retrievedPages.get(i).setImages(retriveImages(retrievedPages.get(i).getID()));
+                    //retrievedPages.get(i).setImages(retriveImages(retrievedPages.get(i).getID()));
                     retrievedPages.get(i).setLinks(retrieveAllLinks(retrievedPages.get(i).getID()));
                     retrievedPages.get(i).setwords(retrieveAllWords(retrievedPages.get(i).getID()));
                     pages.add(retrievedPages.get(i));

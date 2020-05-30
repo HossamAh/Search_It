@@ -1,4 +1,6 @@
 import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -8,7 +10,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.tartarus.snowball.ext.PorterStemmer;
 
-public class Page {
+public class Page implements Serializable {
 
     public Document doc;
     public String title;
@@ -18,7 +20,7 @@ public class Page {
     public String url;
     public ArrayList<String> links ;
     public String description;
-    public Set<Crawler.image> referencedImages;
+    //public Set<Crawler.image> referencedImages;
     public Hashtable<String, Integer> words ;
     static public List<String> stopwords = Arrays.asList("abroad", "according", "accordingly", "across", "actually", "adj", "after", "afterwards", "again", "against", "ago", "ahead", "ain’t", "all", "allow", "allows",
             "almost", "alone", "along", "alongside", "already", "also", "although", "always", "am", "amid", "amidst", "among", "amongst","a", "an", "and", "another", "any", "anybody", "anyhow", "anyone", "anything", "anyway", "anyways", "anywhere", "apart", "appear", "appreciate", "appropriate", "are", "aren’t", "around", "as", "a’s", "aside", "ask", "asking", "associated", "at", "available", "away", "awfully",
@@ -52,7 +54,7 @@ public class Page {
         this.url = urll;
         this.words = new Hashtable<String, Integer>();
         this.links = new ArrayList<String>();
-        this.referencedImages = new HashSet<Crawler.image>();
+        //this.referencedImages = new HashSet<Crawler.image>();
     }
     public Page(String url, String tit, String dis) {
         this.title = tit;
@@ -189,18 +191,18 @@ public class Page {
     public String getDescription(){
         return description;
     }
-    public Set<Crawler.image> getImages(){
-        return referencedImages;
-    }
-
-    public void setImages(Set<Crawler.image> images){
-        if(!(images.isEmpty())) {
-            //System.out.println(images);
-            this.referencedImages = images;
-
-            //System.out.println(referencedImages);
-        }
-    }
+//    public Set<Crawler.image> getImages(){
+//        return referencedImages;
+//    }
+//
+//    public void setImages(Set<Crawler.image> images){
+//        if(!(images.isEmpty())) {
+//            //System.out.println(images);
+//            this.referencedImages = images;
+//
+//            //System.out.println(referencedImages);
+//        }
+//    }
 
     public static void printPages(List<Page> p){
         for (int i = 0; i < p.size(); i++) {
@@ -213,6 +215,8 @@ public class Page {
     }
     public static class manageDB{
         public static SQLiteJDBC DB;
+        public static final long serialVersionuibUID = 1L;
+        public static Boolean queryAccepted=false;
         public static void docProcess(Crawler.OutputDoc crawlerOutput) {
             //Iterator<Crawler.OutputDoc> itr = crawlerOutput.iterator();
             System.out.println("yes!");
@@ -225,7 +229,7 @@ public class Page {
             }
 
             Page t = new Page(crawlerOutput.doc, crawlerOutput.getUrl().toString());
-            t.setImages(crawlerOutput.referencedImages);
+            //t.setImages(crawlerOutput.referencedImages);
 
             t.metaData();
             t.ExtractWords();
@@ -238,8 +242,102 @@ public class Page {
                 e.printStackTrace();
             }
 
+            Thread T= new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        ServerSocket serverSocket=new ServerSocket(7800);
+                        System.out.println("server is up and running...");
+                        while (true) {
+                            Socket s=	serverSocket.accept();
+                            queryAccepted=true;
+                            System.out.println("server accepted the query...");
+                            DataInputStream DIS=new DataInputStream(s.getInputStream());
+                            String query_and_flags=DIS.readUTF();
+                            DIS.close();
+                            s.close();
+                            Boolean imageSearch=false;
+                            Boolean phraseSearch=false;
+                            System.out.println("query_and_flags="+query_and_flags);
+                            String[] list_query_and_flags=query_and_flags.split("@");
+                            String query=list_query_and_flags[0];
+                            if(list_query_and_flags[1].equals("phrase"))
+                                phraseSearch=true;
+                            if(list_query_and_flags[2].equals("yes"))
+                                imageSearch=true;
+                            DB.retrievePagesSetWords(query);
+                            if(imageSearch)
+                                System.out.println("it's image search");
+                            else System.out.println("no image search");
+                            if(phraseSearch)
+                                System.out.println("it's phrase search");
+                            else System.out.println("no phrase search");
+
+                            queryAccepted=false;
+
+                        }
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+
+
+                }
+            }
+            );
+            T.start();
         }
-//        public static void main(String[] arg){
+        public static void main(String[] arg){
+            Thread T= new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        ServerSocket serverSocket=new ServerSocket(7800);
+                        System.out.println("server is up and running...");
+                        DB = new SQLiteJDBC();
+
+                        while (true) {
+                            DB.open();
+                            Socket s=	serverSocket.accept();
+                            queryAccepted=true;
+                            System.out.println("server accepted the query...");
+                            DataInputStream DIS=new DataInputStream(s.getInputStream());
+                            String query_and_flags=DIS.readUTF();
+                            Boolean imageSearch=false;
+                            Boolean phraseSearch=false;
+                            System.out.println("query_and_flags="+query_and_flags);
+                            String[] list_query_and_flags=query_and_flags.split("@");
+                            String query=list_query_and_flags[0];
+                            if(list_query_and_flags[1].equals("phrase"))
+                                phraseSearch=true;
+                            if(list_query_and_flags[2].equals("yes"))
+                                imageSearch=true;
+                            DB.retrievePagesSetWords(query);
+                            if(imageSearch)
+                                System.out.println("it's image search");
+                            else System.out.println("no image search");
+                            if(phraseSearch)
+                                System.out.println("it's phrase search");
+                            else System.out.println("no phrase search");
+                            DIS.close();
+                            s.close();
+                            queryAccepted=false;
+                            DB.close();
+
+                        }
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+
+
+                }
+            }
+            );
+            T.start();
+        }
 //            DB = new SQLiteJDBC();
 //            System.out.println("yes!");
 //            List<Page> p;
