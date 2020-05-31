@@ -1,15 +1,14 @@
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 //Crawler name is Spider for testing the robots.txt file ,
@@ -24,7 +23,7 @@ public class Crawler {
     private  int threadsNumber;
     private  boolean firstIterationCheck=false;
     public  HashSet<OutputDoc> crawlerOutput;
-    public  class image
+    public static class image
     {
         String imageSrc;
         String imageCaption;

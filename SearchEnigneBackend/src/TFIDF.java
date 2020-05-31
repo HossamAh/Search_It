@@ -1,6 +1,5 @@
 import java.util.Arrays;
 import java.util.List;
-import java.util.ArrayList;
 public class TFIDF {
     //---this function calc the term frequency given a document and term
     public double tf(List<String>doc, String term) {

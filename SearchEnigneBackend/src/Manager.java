@@ -1,14 +1,14 @@
-import java.lang.*;
-import java.io.*;
+import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.HashSet;
 
 public class Manager {
-  //  public static Page.manageDB DB;
+    public static Page.manageDB DB;
     private static HashSet<Crawler.OutputDoc> crawlerOutput;
 
     public static void main(String[] arg) throws IOException, URISyntaxException, InterruptedException {
         //crawlerOutput = new HashSet<>();
+        DB = new Page.manageDB();
         Crawler crawler = new Crawler();
         new Thread(new Runnable() {
             @Override
@@ -33,11 +33,7 @@ public class Manager {
                         if (crawlerOutput.size() > 0) {
                             synchronized (crawler.crawlerOutput) {
                                 for (Crawler.OutputDoc output : crawlerOutput) {
-                                    System.out.println(output.url);
-                                    for(Crawler.image image:output.referencedImages)
-                                    {
-                                        System.out.println(image.imageSrc+" "+image.imageCaption);
-                                    }
+                                    DB.docProcess(output);
                                     crawlerOutput.remove(output);
                                 }
                             }
