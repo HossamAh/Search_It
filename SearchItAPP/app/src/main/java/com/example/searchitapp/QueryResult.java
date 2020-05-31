@@ -30,6 +30,7 @@ public class QueryResult extends AppCompatActivity{
     private int CurrentPageNumber =1;
     private int TotalPagesNumber;
     private int previousLimit;
+    private int nextLimit;
     private ArrayList<String> QueryKeys;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,53 +51,35 @@ public class QueryResult extends AppCompatActivity{
                     ResultsString.get(k+1),ResultsString.get(k+2),null,null);
             ResultsList.add(tempItem1);
         }
+//
+//        QueryResultItem ResultItem1 =new QueryResultItem(0,"Facebook|Login or sign up",
+//                "https://www.facebook.com/","facebook about About FACEBOOK",null,null);
+//        QueryResultItem ResultItem2 =new QueryResultItem(0,"Twitter|Login or sign up",
+//                "https://www.twitter.com/","twitter about twitter again",null,null);
+//        QueryResultItem ResultItem3 =new QueryResultItem(0,"Instagram|Login or sign up",
+//                "https://www.Instagram.com/","instagram about instagram again",null,null);
+//        for (int k=0;k<10;k++)
+//        {
+//            ResultsList.add(ResultItem2);
+//        }
+//        for (int k=0;k<2;k++)
+//        {
+//            ResultsList.add(ResultItem1);
+//        }
         QueryKeys =new ArrayList<>();
         QueryKeys = getIntent().getStringArrayListExtra("QueryKeys");
-        //QueryKeys.add("Shopping");
-        /*QueryKeys.add("facebook");
-        QueryKeys.add("twitter");
-        QueryKeys.add("instagram");*/
-       /* Thread resultCollector =
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-
-        try {
-           Socket s = new Socket("192.168.194.92",1700);
-            Log.d("STATE", "socket established!");
-        ObjectInputStream is=new ObjectInputStream(s.getInputStream());
-        List<String> pages=null;
-        pages=(List<String>) is.readObject();
-            s.close();
-        for (int k=0;k<=pages.size()-2;k+=3)
-            {
-                QueryResultItem tempItem1 =new QueryResultItem(0,pages.get(k),
-                        pages.get(k+1),pages.get(k+2),null,null);
-                ResultsList.add(tempItem1);
-            }
-
-
-
-        } catch (IOException | ClassNotFoundException e) {
-        e.printStackTrace();
-    }
-   }});
-       resultCollector.start();*/
-       /* try {
-            resultCollector.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }*/
         TotalPagesNumber= (int) Math.ceil((ResultsList.size()/10.0));
 
         ResultsNumber.setText("results contain "+ResultsList.size()+" pages");
         CurrentPage.setText(CurrentPageNumber+"/"+TotalPagesNumber);
         CurrentResultPage = new ArrayList<>();
         if(ResultsList.size()<10)
-        {CurrentResultPage.addAll(ResultsList);
-            NextPage.setClickable(false);}
+        {
+            CurrentResultPage.addAll(ResultsList);
+            NextPage.setClickable(false);
+        }
         else
-        CurrentResultPage.addAll(ResultsList.subList(0,CurrentPageNumber*10));
+            CurrentResultPage.addAll(ResultsList.subList(0,CurrentPageNumber*10));
 
         pagesFragment = ResultsPageFragment.newInstance(CurrentResultPage,QueryKeys);
         ft = getSupportFragmentManager().beginTransaction();
@@ -118,9 +101,20 @@ public class QueryResult extends AppCompatActivity{
                     }
                     if(CurrentPageNumber>0)
                         previousLimit = CurrentPageNumber-1;
+                    if(previousLimit*10 +10 <= ResultsList.size())
+                    {
+                        nextLimit = previousLimit*10 +10;
+                    }
+                    else
+                        {
+                            nextLimit = (ResultsList.size()-previousLimit*10)+previousLimit*10;
+                        }
                     CurrentPage.setText(CurrentPageNumber+"/"+TotalPagesNumber);
                     CurrentResultPage = new ArrayList<>();
-                    CurrentResultPage.addAll(ResultsList.subList(previousLimit*10, CurrentPageNumber * 10));
+                    Log.e("TAG", "onClick: results size"+ResultsList.size());
+                    Log.e("TAG", "onClick: previous limit"+previousLimit*10);
+                    Log.e("TAG", "onClick: next limit"+nextLimit);
+                    CurrentResultPage.addAll(ResultsList.subList(previousLimit*10, nextLimit));
                     pagesFragment = ResultsPageFragment.newInstance(CurrentResultPage,QueryKeys);
                     ft = getSupportFragmentManager().beginTransaction();
                     ft.replace(R.id.ResultPage_FrameLayout, pagesFragment).addToBackStack(null);
@@ -143,9 +137,21 @@ public class QueryResult extends AppCompatActivity{
                     }
                     if(CurrentPageNumber>0)
                         previousLimit = CurrentPageNumber-1;
+                    if(previousLimit*10 +10 <= ResultsList.size())
+                    {
+                        nextLimit = previousLimit*10 +10;
+                    }
+                    else
+                    {
+                        nextLimit = (ResultsList.size()-previousLimit*10)+previousLimit*10;
+                    }
                     CurrentPage.setText(CurrentPageNumber+"/"+TotalPagesNumber);
                     CurrentResultPage = new ArrayList<>();
-                    CurrentResultPage.addAll(ResultsList.subList(previousLimit*10,CurrentPageNumber*10));
+                    Log.e("TAG", "onClick: results size"+ResultsList.size());
+                    Log.e("TAG", "onClick: previous limit"+previousLimit*10);
+                    Log.e("TAG", "onClick: next limit"+nextLimit);
+
+                    CurrentResultPage.addAll(ResultsList.subList(previousLimit*10,nextLimit));
                     pagesFragment = ResultsPageFragment.newInstance(CurrentResultPage,QueryKeys);
                     ft = getSupportFragmentManager().beginTransaction();
                     ft.replace(R.id.ResultPage_FrameLayout, pagesFragment).addToBackStack(null);
