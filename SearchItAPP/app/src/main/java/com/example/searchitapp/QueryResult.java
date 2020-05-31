@@ -10,7 +10,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import androidx.fragment.app.FragmentTransaction;
 import com.example.searchitapp.models.QueryResultItem;
-import com.example.searchitapp.Page;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 
@@ -44,13 +43,20 @@ public class QueryResult extends AppCompatActivity{
         PreviousPage = (ImageButton)findViewById(R.id.Previous_Button);
 
         ResultsList =new ArrayList<>();
-        //ResultsList = getIntent().getParcelableArrayListExtra("Results");
+        ArrayList<String> ResultsString = getIntent().getStringArrayListExtra("Results");
+        for (int k=0;k<=ResultsString.size()-2;k+=3)
+        {
+            QueryResultItem tempItem1 =new QueryResultItem(0,ResultsString.get(k),
+                    ResultsString.get(k+1),ResultsString.get(k+2),null,null);
+            ResultsList.add(tempItem1);
+        }
         QueryKeys =new ArrayList<>();
-        //QueryKeys = getIntent().getStringArrayListExtra("QueryKeys");
-        QueryKeys.add("facebook");
+        QueryKeys = getIntent().getStringArrayListExtra("QueryKeys");
+        //QueryKeys.add("Shopping");
+        /*QueryKeys.add("facebook");
         QueryKeys.add("twitter");
-        QueryKeys.add("instagram");
-        Thread resultCollector =
+        QueryKeys.add("instagram");*/
+       /* Thread resultCollector =
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -75,15 +81,20 @@ public class QueryResult extends AppCompatActivity{
         e.printStackTrace();
     }
    }});
-       resultCollector.start();
-
+       resultCollector.start();*/
+       /* try {
+            resultCollector.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }*/
         TotalPagesNumber= (int) Math.ceil((ResultsList.size()/10.0));
 
         ResultsNumber.setText("results contain "+ResultsList.size()+" pages");
         CurrentPage.setText(CurrentPageNumber+"/"+TotalPagesNumber);
         CurrentResultPage = new ArrayList<>();
         if(ResultsList.size()<10)
-            CurrentResultPage.addAll(ResultsList);
+        {CurrentResultPage.addAll(ResultsList);
+            NextPage.setClickable(false);}
         else
         CurrentResultPage.addAll(ResultsList.subList(0,CurrentPageNumber*10));
 
@@ -152,6 +163,7 @@ public class QueryResult extends AppCompatActivity{
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+        ResultsList.clear();
         startActivity(new Intent(this,MainActivity.class));
     }
 }

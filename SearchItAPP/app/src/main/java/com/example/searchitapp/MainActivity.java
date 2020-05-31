@@ -8,15 +8,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.os.StrictMode;
 import android.provider.SearchRecentSuggestions;
 import android.util.Log;
-import android.view.View;
+
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.SearchView;
-import android.widget.Toast;
+
 
 import com.example.searchitapp.models.QueryResultItem;
 
@@ -38,7 +37,7 @@ import java.util.stream.Stream;
 public class MainActivity extends AppCompatActivity {
     SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this,
             MySuggestionProvider.AUTHORITY, MySuggestionProvider.MODE);
-
+    final List<String>[] pages = new List[]{null};
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,8 +86,6 @@ public class MainActivity extends AppCompatActivity {
     private void processMyQuery(String query) throws InterruptedException {
         CheckBox imageSearch=findViewById(R.id.checkBox);
     // query processing
-    /*Toast.makeText(com.example.MainActivity.this,
-    "you typed: "+query, Toast.LENGTH_LONG).show();*/
     List<String> stopwords = Arrays.asList("abroad", "according", "accordingly", "across", "actually", "adj", "after", "afterwards", "again", "against", "ago", "ahead", "ain’t", "all", "allow", "allows",
                 "almost", "alone", "along", "alongside", "already", "also", "although", "always", "am", "amid", "amidst", "among", "amongst", "an", "and", "another", "any", "anybody", "anyhow", "anyone", "anything", "anyway", "anyways", "anywhere", "apart", "appear", "appreciate", "appropriate", "are", "aren’t", "around", "as", "a’s", "aside", "ask", "asking", "associated", "at", "available", "away", "awfully",
                 "back","backward","backwards","be","became","because","become","becomes","becoming","been","before","beforehand","begin","behind","being","believe","below","beside","besides","best","better","between","beyond","both","brief","but","by",
@@ -158,22 +155,14 @@ public class MainActivity extends AppCompatActivity {
                     DOS.flush();
                     DOS.close();
                     S1.close();
-                 /*   if(finalImgSearch.equals("@yes"))//start image search activity
-                    {
-                        Intent intent = new Intent(this, imageResult.class);
-                        startActivity(intent);
-                    }
-                    else //start result activity
-                    {
-                        Intent intent = new Intent(this, QueryResult.class);
-                        startActivity(intent);
-                    }*/
                   } catch (IOException e) {
                     e.printStackTrace();
                   }
                 });
         querySender.start();
         querySender.join();
+
+        //ArrayList<QueryResultItem> ResultsList = null;
         if(finalImgSearch.equals("@yes"))//start image search activity
         {
             Intent intent = new Intent(this, imageResult.class);
@@ -181,12 +170,53 @@ public class MainActivity extends AppCompatActivity {
         }
         else //start result activity
         {
+            Thread resultCollector =
+                    new Thread(new Runnable() {
 
+
+                        @Override
+                        public void run() {
+
+                            try {
+                                Socket s = new Socket("192.168.194.92",1700);
+                                Log.d("STATE", "socket established!");
+                                if(pages[0]!=null)
+                                    pages[0].clear();
+                                ObjectInputStream is=new ObjectInputStream(s.getInputStream());
+                                pages[0] =(List<String>) is.readObject();
+                                
+                                s.close();
+
+
+                            } catch (IOException | ClassNotFoundException e) {
+                                e.printStackTrace();
+                            }
+                        }});
+            resultCollector.start();
+            resultCollector.join();
             Intent intent = new Intent(this, QueryResult.class);
-
+            ArrayList<String> QueryKeys =new ArrayList<>();
+            String[] keys=(query+finalPhrase).toLowerCase().split(" ");
+            for(int i=0;i<keys.length;i++)
+            {
+                QueryKeys.add(keys[i]);
+            }
+           intent.putStringArrayListExtra("QueryKeys",QueryKeys);
+            intent.putStringArrayListExtra("Results", (ArrayList<String>) pages[0]);
             startActivity(intent);
         }
 
+    }
+
+    @Override
+    protected void onRestart() {
+
+        super.onRestart();
+        if(pages[0]!=null)
+            pages[0].clear();
+
+        getIntent().removeExtra("QueryKeys");
+        getIntent().removeExtra("Results");
     }
 }
 
