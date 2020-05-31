@@ -34,6 +34,10 @@ public class Manager {
                             synchronized (crawler.crawlerOutput) {
                                 for (Crawler.OutputDoc output : crawlerOutput) {
                                     System.out.println(output.url);
+                                    for(Crawler.image image:output.referencedImages)
+                                    {
+                                        System.out.println(image.imageSrc+" "+image.imageCaption);
+                                    }
                                     crawlerOutput.remove(output);
                                 }
                             }

@@ -38,10 +38,10 @@ public class Crawler {
     {
         URL url;
         Set<String> referencedLinks;
-        Set<image> referencedImages;
+        HashSet<image> referencedImages;
         Document doc;
 
-        public OutputDoc(URL url, Set<String> referencedLinks, Set<image> referencedImages, Document doc) {
+        public OutputDoc(URL url, Set<String> referencedLinks, HashSet<image> referencedImages, Document doc) {
             this.url = url;
             this.referencedLinks = referencedLinks;
             this.referencedImages = referencedImages;
@@ -52,7 +52,7 @@ public class Crawler {
             return referencedImages;
         }
 
-        public void setReferencedImages(Set<image> referencedImages) {
+        public void setReferencedImages(HashSet<image> referencedImages) {
             this.referencedImages = referencedImages;
         }
 
@@ -220,7 +220,7 @@ public class Crawler {
                 return;
             }
             Set<String> referencedLinks = new HashSet<>();
-            Set<image> referencedImages = new HashSet<>();
+            HashSet<image> referencedImages = new HashSet<>();
             int referencesNumber = 0;
             Elements Links = doc.select("a[href]");
             Elements images = doc.select("img");
@@ -233,8 +233,9 @@ public class Crawler {
                 String absoluteUrl = image.absUrl("src");  //absolute URL on src
 //                System.out.println("image SRC:"+absoluteUrl);
 //                System.out.println("image Caption:"+caption);
-
-                referencedImages.add(new image(absoluteUrl,caption));
+                if(!referencedImages.contains(absoluteUrl)) {
+                    referencedImages.add(new image(absoluteUrl, caption));
+                }
             }
 
             for (Element newLink : Links) {
