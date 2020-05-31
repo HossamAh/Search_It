@@ -1,6 +1,8 @@
 package com.example.searchitapp;
 
 import android.content.Intent;
+import android.os.StrictMode;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -8,9 +10,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import androidx.fragment.app.FragmentTransaction;
 import com.example.searchitapp.models.QueryResultItem;
+import com.example.searchitapp.Page;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 
-
+import java.net.Socket;
 import java.util.ArrayList;
+
+import java.util.List;
+
 
 public class QueryResult extends AppCompatActivity{
     private ArrayList<QueryResultItem> ResultsList,CurrentResultPage;
@@ -28,6 +36,8 @@ public class QueryResult extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_query_result2);
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
         ResultsNumber = (TextView)findViewById(R.id.result_number_textView);
         CurrentPage = (TextView)findViewById(R.id.CurrentPAge_textView);
         NextPage =(ImageButton)findViewById(R.id.Next_Button);
@@ -40,28 +50,41 @@ public class QueryResult extends AppCompatActivity{
         QueryKeys.add("facebook");
         QueryKeys.add("twitter");
         QueryKeys.add("instagram");
+        Thread resultCollector =
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+
+        try {
+           Socket s = new Socket("192.168.194.92",1700);
+            Log.d("STATE", "socket established!");
+        ObjectInputStream is=new ObjectInputStream(s.getInputStream());
+        List<String> pages=null;
+        pages=(List<String>) is.readObject();
+            s.close();
+        for (int k=0;k<=pages.size()-2;k+=3)
+            {
+                QueryResultItem tempItem1 =new QueryResultItem(0,pages.get(k),
+                        pages.get(k+1),pages.get(k+2),null,null);
+                ResultsList.add(tempItem1);
+            }
 
 
-        QueryResultItem ResultItem1 =new QueryResultItem(0,"Facebook|Login or sign up",
-                "https://www.facebook.com/","facebook about About FACEBOOK",null,null);
-        QueryResultItem ResultItem2 =new QueryResultItem(0,"Twitter|Login or sign up",
-                "https://www.twitter.com/","twitter about twitter again",null,null);
-        QueryResultItem ResultItem3 =new QueryResultItem(0,"Instagram|Login or sign up",
-                "https://www.Instagram.com/","instagram about instagram again",null,null);
-        for(int i=0;i<10;i++)
-            ResultsList.add(ResultItem1);
-        for(int i=0;i<10;i++)
-            ResultsList.add(ResultItem2);
-        for(int i=0;i<10;i++)
-            ResultsList.add(ResultItem3);
 
-
+        } catch (IOException | ClassNotFoundException e) {
+        e.printStackTrace();
+    }
+   }});
+       resultCollector.start();
 
         TotalPagesNumber= (int) Math.ceil((ResultsList.size()/10.0));
 
         ResultsNumber.setText("results contain "+ResultsList.size()+" pages");
         CurrentPage.setText(CurrentPageNumber+"/"+TotalPagesNumber);
         CurrentResultPage = new ArrayList<>();
+        if(ResultsList.size()<10)
+            CurrentResultPage.addAll(ResultsList);
+        else
         CurrentResultPage.addAll(ResultsList.subList(0,CurrentPageNumber*10));
 
         pagesFragment = ResultsPageFragment.newInstance(CurrentResultPage,QueryKeys);
@@ -132,3 +155,4 @@ public class QueryResult extends AppCompatActivity{
         startActivity(new Intent(this,MainActivity.class));
     }
 }
+
