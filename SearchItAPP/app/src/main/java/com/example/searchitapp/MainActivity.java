@@ -199,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
             String[] keys=(query+finalPhrase).toLowerCase().split(" ");
             for(int i=0;i<keys.length;i++)
             {
-                QueryKeys.add(keys[i]);
+                QueryKeys.add(keys[i].toLowerCase());
             }
            intent.putStringArrayListExtra("QueryKeys",QueryKeys);
             intent.putStringArrayListExtra("Results", (ArrayList<String>) pages[0]);
