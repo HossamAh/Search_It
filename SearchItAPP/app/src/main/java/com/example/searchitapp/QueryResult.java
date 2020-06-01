@@ -76,7 +76,7 @@ public class QueryResult extends AppCompatActivity{
         if(ResultsList.size()<10)
         {
             CurrentResultPage.addAll(ResultsList);
-            NextPage.setClickable(false);
+
         }
         else
             CurrentResultPage.addAll(ResultsList.subList(0,CurrentPageNumber*10));

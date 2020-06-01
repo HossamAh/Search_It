@@ -164,8 +164,31 @@ public class MainActivity extends AppCompatActivity {
 
         //ArrayList<QueryResultItem> ResultsList = null;
         if(finalImgSearch.equals("@yes"))//start image search activity
-        {
+        {Thread resultCollector =
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        try {
+                            Socket s = new Socket("192.168.194.92",1700);
+                            Log.d("STATE", "socket established!");
+                            if(pages[0]!=null)
+                                pages[0].clear();
+                            ObjectInputStream is=new ObjectInputStream(s.getInputStream());
+                            pages[0] =(List<String>) is.readObject();
+
+                            s.close();
+
+
+                        } catch (IOException | ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                    }});
+            resultCollector.start();
+            resultCollector.join();
+
             Intent intent = new Intent(this, imageResult.class);
+            intent.putStringArrayListExtra("imagesResult", (ArrayList<String>) pages[0]);
             startActivity(intent);
         }
         else //start result activity
