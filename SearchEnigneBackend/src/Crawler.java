@@ -13,17 +13,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 //Crawler name is Spider for testing the robots.txt file ,
 public class Crawler {
-    private   final int PAGES_LIIMIT = 100;
+    private   final int PAGES_LIIMIT = 1000;
     private  HashSet<String> linksSet;
     public  AtomicInteger pagescount;
     public  ArrayList<Integer> LocksSet;
-    private  Set<String> notAllowableURLs;
     private  ArrayList<Thread> ThreadList;
     private ArrayList<ExecutorService> EXList;
+    private HashSet<String>alreadyCrawled;
     private  int threadsNumber;
     private  boolean firstIterationCheck=false;
     public  HashSet<OutputDoc> crawlerOutput;
-    public  class image
+    public static class image
     {
         String imageSrc;
         String imageCaption;
@@ -71,6 +71,19 @@ public class Crawler {
             this.referencedLinks = referencedLinks;
         }
     }
+
+    public void awaitTerminationAfterShutdown(ExecutorService threadPool) {
+        threadPool.shutdown();
+        try {
+            if (!threadPool.awaitTermination(60, TimeUnit.SECONDS)) {
+                threadPool.shutdownNow();
+            }
+        } catch (InterruptedException ex) {
+            threadPool.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+    }
+
     //class that store link url string and the number of references in it ,
     // to determined whether to use it in the new iteration or not
     public  class Link implements Comparable<Link>
@@ -95,9 +108,14 @@ public class Crawler {
     }
     private  PriorityQueue<Link> newSeed;
     public  String Custom_Normalize(String Link) throws MalformedURLException {
+
         if(Link.endsWith("/"))
         {
             Link=Link.substring(0,Link.length()-1);
+        }
+        if(Link.endsWith("/#"))
+        {
+            Link=Link.substring(0,Link.length()-2);
         }
         URL url = new URL(Link);
         if(url.getProtocol().equals("http"))
@@ -116,27 +134,23 @@ public class Crawler {
         return new URL(link);
     }
     //check link to crawl according to host robots.txt
-    public  boolean checkLink(String Url)
+    public  boolean checkLink(String Url,Set<String>NotAllowableURLs)
     {
-        synchronized (notAllowableURLs) {
-            for (String link :notAllowableURLs)
-            {
-                if(!link.equals("")) {
-                    if (Url.toString().contains(link))
-                        return false;
-                }
+        for (String link :NotAllowableURLs)
+        {
+            if(!link.equals("")) {
+                if (Url.contains(link))
+                    return false;
             }
         }
         return true;
     }
     //function to parse robots.txt file and add not allowed to not allowable urls
     // and return if the robots.txt file has constraints to my crawler or not.
-    public  boolean parseRobotTxt(URL robotsTxtURL) throws IOException {
-        notAllowableURLs.clear();
+    public  boolean parseRobotTxt(URL robotsTxtURL,Set<String>notAllowable) throws IOException {
         URLConnection urlcon = robotsTxtURL.openConnection();
         InputStream stream = urlcon.getInputStream();
         Scanner scanner = new Scanner(stream);
-        Set<String> URLS =new HashSet<>();
         String line;
         //to check if the coming lines is for my crawler or not.
         boolean myConstraintsCheck = false;
@@ -162,15 +176,7 @@ public class Crawler {
             }
             else if(line.startsWith("Disallow: ") && myConstraintsCheck)
             {
-                URLS.add((line.split("Disallow: "))[1].replaceAll("/*",""));
-            }
-        }
-        synchronized (notAllowableURLs)
-        {
-            notAllowableURLs.clear();
-            if(myConstraintsCheck)
-            {
-                notAllowableURLs.addAll(URLS);
+                notAllowable.add((line.split("Disallow: "))[1].replaceAll("/*",""));
             }
         }
         return myConstraintsCheck;
@@ -187,8 +193,22 @@ public class Crawler {
                     URL link = new URL(itr.next());
 
                     try {
-                        if(pagescount.intValue()<PAGES_LIIMIT)
-                            linksExtraction(link, links);
+                        if(pagescount.intValue()<PAGES_LIIMIT) {
+                            boolean alreadyCrawledContain;
+                            boolean LinksContain;
+                            synchronized (alreadyCrawled)
+                            {
+                                alreadyCrawledContain = alreadyCrawled.contains(link.toString());
+                            }
+                            LinksContain = links.contains(link.toString());
+                            if(LinksContain==true && alreadyCrawledContain==false) {
+                                linksExtraction(link, links);
+                                //System.out.println(link.toString() + "\n" + pagescount.intValue() + "#thread: " + Thread.currentThread().getName());
+                                synchronized (alreadyCrawled) {
+                                    alreadyCrawled.add(link.toString());
+                                }
+                            }
+                        }
                         else return;
 
                     } catch (Exception e) {
@@ -235,7 +255,15 @@ public class Crawler {
 
             referencedImages.add(new image(absoluteUrl,caption));
         }
-
+        String robotsTxtURL = normalizeURL(link).toString() + "/robots.txt";
+        URL robotstxt = new URL(robotsTxtURL);
+        Set<String>NotAllowable=new HashSet<>();
+        boolean ConstraintsCheck = false;
+        try {
+            ConstraintsCheck = parseRobotTxt(robotstxt,NotAllowable);
+        } catch (IOException e) {
+            ConstraintsCheck = false;
+        }
         for (Element newLink : Links) {
             if (pagescount.intValue() < PAGES_LIIMIT) {
                 String Link = newLink.attr("abs:href");
@@ -243,30 +271,38 @@ public class Crawler {
                 Link = new URI(Link).normalize().toString();
                 Link = Custom_Normalize(Link);
                 URL URLLink = new URL(Link);
+                boolean linksSetContain;
+                boolean alreadyCrawledContain;
+                synchronized (linksSet) {
+                    linksSetContain = linksSet.contains(Link);
+                }
+                synchronized (alreadyCrawled){
+                    alreadyCrawledContain = alreadyCrawled.contains(Link);
+                }
                 if (URLLink != null) {
-                    if (linksSet.contains(Link) == false && links.contains(Link) == false && referencedLinks.contains(Link) == false) {
-                        String robotsTxtURL = normalizeURL(URLLink).toString() + "/robots.txt";
-                        URL robotstxt = new URL(robotsTxtURL);
-                        boolean ConstraintsCheck = false;
-                        try {
-                            ConstraintsCheck = parseRobotTxt(robotstxt);
-                        } catch (IOException e) {
-                            ConstraintsCheck = false;
-                        }
-                        if (checkLink(URLLink.toString()) == false && ConstraintsCheck) {
+                    if (linksSetContain == false && links.contains(Link) == false && alreadyCrawledContain ==false && referencedLinks.contains(Link) == false) {
+                        if (checkLink(URLLink.toString(),NotAllowable) == false && ConstraintsCheck) {
                             continue;
                         }
                         referencedLinks.add(Link);
                         if(pagescount.intValue()<PAGES_LIIMIT)
                         {
+                            synchronized (alreadyCrawled)
+                            {
+                                alreadyCrawledContain=alreadyCrawled.contains(Link);
+                            }
                             synchronized (linksSet) {
-                                linksSet.add(Link);
+                                if(linksSet.contains(Link)==false&& alreadyCrawledContain==false) {
+                                    linksSet.add(Link);
+                                    links.add(Link);
+                                    referencesNumber++;
+                                }
                             }
                         }
                         else return;
-                        links.add(Link);
+
                         //System.out.println(Link + "\n" + pagescount.intValue() + "#thread: " + Thread.currentThread().getName());
-                        referencesNumber++;
+
                     }
                 }
             }
@@ -291,9 +327,6 @@ public class Crawler {
         pagescount  =new AtomicInteger(0);
         LocksSet = new ArrayList();
         linksSet = new HashSet<String>();
-        notAllowableURLs = new HashSet<>();
-//        Scanner scanner = new Scanner(System.in);
-//        threadsNumber = scanner.nextInt();
         threadsNumber = threads;
         for(int i =0;i<threadsNumber;i++)
         {
@@ -302,6 +335,7 @@ public class Crawler {
         linksSet.add(new URI("https://dmoz-odp.org").normalize().toString());
         newSeed = new PriorityQueue<>();
         crawlerOutput = new HashSet<>();
+        alreadyCrawled = new HashSet<>();
         crawlingBase(linksSet);
         //linksSet.add("http://gutenberg.org");
     }
@@ -348,7 +382,8 @@ public class Crawler {
             }
             linksSets.add(tempSet);
         }
-
+        linksSet.clear();
+        //ExecutorService es = null;
         if (firstIterationCheck == false) {
             EXList = new ArrayList<>();
         }
@@ -364,28 +399,41 @@ public class Crawler {
 
 
         while(pagescount.intValue()<PAGES_LIIMIT);
-        for (int i=0;i<threadsNumber-1;i++) {
-            synchronized (linksSets) {
-                linksSets.notifyAll();
+
+        Iterator<ExecutorService>i;
+        int size = EXList.size();
+        for (int k=0;k<size;k++) {
+            i=EXList.iterator();
+            ExecutorService e = i.next();
+            while (!es.isTerminated()) {
+                synchronized (linksSet) {
+                    linksSet.notifyAll();
+                }
+                awaitTerminationAfterShutdown(es);
             }
-            while(!es.isShutdown())
-                es.shutdownNow();
+
         }
         firstIterationCheck = true;
-        linksSet.clear();
-        seedSet.clear();
-        synchronized (newSeed) {
-            for (Link newlink : newSeed) {
-                if (newlink.referencesNumber > 10) {
-                    seedSet.add(newlink.linkUrl);
+        linksSet.removeAll(alreadyCrawled);
+        alreadyCrawled.clear();
+        if(linksSet.size()<1)
+        {
+            seedSet.clear();
+            synchronized (newSeed) {
+                for (Link newlink : newSeed) {
+                    if (newlink.referencesNumber > 10) {
+                        seedSet.add(newlink.linkUrl);
+                    }
                 }
             }
         }
+        else
+        {
+            seedSet.clear();
+            seedSet.addAll(linksSet);
+        }
         newSeed.clear();
-        //clear crawler output is done by other process after processing on the link.
-//        synchronized (crawlerOutput) {
-//            crawlerOutput.clear();
-//        }
+
 
         System.out.println("end of crawling iteration");
         if(seedSet.size()<1)

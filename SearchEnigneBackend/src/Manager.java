@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashSet;
+import java.util.Iterator;
 
 public class Manager {
     //public static Page.manageDB DB;
@@ -14,7 +15,7 @@ public class Manager {
             @Override
             public void run() {
                 try {
-                        crawler.CrawlerProcess(15);
+                        crawler.CrawlerProcess(5);
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (InterruptedException e) {
@@ -24,24 +25,35 @@ public class Manager {
                 }
             }
         }).start();
+
         new Thread(new Runnable() {
             @Override
             public void run() {
                 while (true) {
                     crawlerOutput = crawler.crawlerOutput;
-                    if (crawlerOutput != null) {
-                        if (crawlerOutput.size() > 0) {
-                            synchronized (crawler.crawlerOutput) {
-                                for (Crawler.OutputDoc output : crawlerOutput) {
-                                    //DB.docProcess(output);
+                    if (crawlerOutput != null)
+                    {
+                        if (crawlerOutput.size() > 0)
+                        {
+                            Iterator<Crawler.OutputDoc> itr = crawlerOutput.iterator();
+                            if(itr.hasNext())
+                            {
+                                Crawler.OutputDoc output;
+                                synchronized (crawlerOutput) {
+                                    output = itr.next();
+                                }
+                                //DB.docProcess(output);
+                                synchronized (crawlerOutput) {
                                     System.out.println(output.url);
                                     crawlerOutput.remove(output);
                                 }
                             }
+
                         }
                     }
                 }
             }
+
         }).start();
     }
 }
