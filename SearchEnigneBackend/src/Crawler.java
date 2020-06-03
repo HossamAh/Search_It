@@ -3,12 +3,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 //Crawler name is Spider for testing the robots.txt file ,
@@ -23,7 +23,7 @@ public class Crawler {
     private  int threadsNumber;
     private  boolean firstIterationCheck=false;
     public  HashSet<OutputDoc> crawlerOutput;
-    public static class image
+    public  class image
     {
         String imageSrc;
         String imageCaption;
@@ -37,10 +37,10 @@ public class Crawler {
     {
         URL url;
         Set<String> referencedLinks;
-        HashSet<image> referencedImages;
+        Set<image> referencedImages;
         Document doc;
 
-        public OutputDoc(URL url, Set<String> referencedLinks, HashSet<image> referencedImages, Document doc) {
+        public OutputDoc(URL url, Set<String> referencedLinks, Set<image> referencedImages, Document doc) {
             this.url = url;
             this.referencedLinks = referencedLinks;
             this.referencedImages = referencedImages;
@@ -51,7 +51,7 @@ public class Crawler {
             return referencedImages;
         }
 
-        public void setReferencedImages(HashSet<image> referencedImages) {
+        public void setReferencedImages(Set<image> referencedImages) {
             this.referencedImages = referencedImages;
         }
 
@@ -102,7 +102,7 @@ public class Crawler {
         URL url = new URL(Link);
         if(url.getProtocol().equals("http"))
         {
-            Link.replace("http","https");
+            Link=Link.replace("http","https");
         }
         return Link;
     }
@@ -156,9 +156,9 @@ public class Crawler {
                     }
                 }
                 else
-                    {
-                        break;
-                    }
+                {
+                    break;
+                }
             }
             else if(line.startsWith("Disallow: ") && myConstraintsCheck)
             {
@@ -210,81 +210,80 @@ public class Crawler {
     }
 
     public  void linksExtraction(URL link,Set<String>links) throws IOException, URISyntaxException {
-            Document doc;
-            try {
-                doc = Jsoup.connect(link.toString()).get();
-            } catch (Exception e) {
-                linksSet.remove(link.toString());
-                links.remove(link.toString());
-                return;
-            }
-            Set<String> referencedLinks = new HashSet<>();
-            HashSet<image> referencedImages = new HashSet<>();
-            int referencesNumber = 0;
-            Elements Links = doc.select("a[href]");
-            Elements images = doc.select("img");
-            for (Element image : images)
+        Document doc;
+        try {
+            doc = Jsoup.connect(link.toString()).get();
+        } catch (Exception e) {
+            linksSet.remove(link.toString());
+            links.remove(link.toString());
+            return;
+        }
+        Set<String> referencedLinks = new HashSet<>();
+        Set<image> referencedImages = new HashSet<>();
+        int referencesNumber = 0;
+        Elements Links = doc.select("a[href]");
+        Elements images = doc.select("img");
+        for (Element image : images)
+        {
+            String caption = image.attr("alt");
+            if(caption == "" ||caption == "..." )
             {
-                String caption = image.attr("alt");
-                if(caption == "" ||caption == "..." )
-                {
-                    caption = doc.title();}
-                String absoluteUrl = image.absUrl("src");  //absolute URL on src
+                caption = doc.title();}
+            String absoluteUrl = image.absUrl("src");  //absolute URL on src
 //                System.out.println("image SRC:"+absoluteUrl);
 //                System.out.println("image Caption:"+caption);
-                if(!referencedImages.contains(absoluteUrl)) {
-                    referencedImages.add(new image(absoluteUrl, caption));
-                }
-            }
 
-            for (Element newLink : Links) {
-                if (pagescount.intValue() < PAGES_LIIMIT) {
-                    String Link = newLink.attr("abs:href");
-                    //Link= UrlCleaner.normalizeUrl(Link);
-                    Link = new URI(Link).normalize().toString();
-                    Link = Custom_Normalize(Link);
-                    URL URLLink = new URL(Link);
-                    if (URLLink != null) {
-                        if (linksSet.contains(Link) == false && links.contains(Link) == false && referencedLinks.contains(Link) == false) {
-                            String robotsTxtURL = normalizeURL(URLLink).toString() + "/robots.txt";
-                            URL robotstxt = new URL(robotsTxtURL);
-                            boolean ConstraintsCheck = false;
-                            try {
-                                ConstraintsCheck = parseRobotTxt(robotstxt);
-                            } catch (IOException e) {
-                                ConstraintsCheck = false;
-                            }
-                            if (checkLink(URLLink.toString()) == false && ConstraintsCheck) {
-                                continue;
-                            }
-                            referencedLinks.add(Link);
-                            if(pagescount.intValue()<PAGES_LIIMIT)
-                            {
-                                synchronized (linksSet) {
-                                    linksSet.add(Link);
-                                }
-                            }
-                            else return;
-                            links.add(Link);
-                            //System.out.println(Link + "\n" + pagescount.intValue() + "#thread: " + Thread.currentThread().getName());
-                            referencesNumber++;
+            referencedImages.add(new image(absoluteUrl,caption));
+        }
+
+        for (Element newLink : Links) {
+            if (pagescount.intValue() < PAGES_LIIMIT) {
+                String Link = newLink.attr("abs:href");
+                //Link= UrlCleaner.normalizeUrl(Link);
+                Link = new URI(Link).normalize().toString();
+                Link = Custom_Normalize(Link);
+                URL URLLink = new URL(Link);
+                if (URLLink != null) {
+                    if (linksSet.contains(Link) == false && links.contains(Link) == false && referencedLinks.contains(Link) == false) {
+                        String robotsTxtURL = normalizeURL(URLLink).toString() + "/robots.txt";
+                        URL robotstxt = new URL(robotsTxtURL);
+                        boolean ConstraintsCheck = false;
+                        try {
+                            ConstraintsCheck = parseRobotTxt(robotstxt);
+                        } catch (IOException e) {
+                            ConstraintsCheck = false;
                         }
+                        if (checkLink(URLLink.toString()) == false && ConstraintsCheck) {
+                            continue;
+                        }
+                        referencedLinks.add(Link);
+                        if(pagescount.intValue()<PAGES_LIIMIT)
+                        {
+                            synchronized (linksSet) {
+                                linksSet.add(Link);
+                            }
+                        }
+                        else return;
+                        links.add(Link);
+                        //System.out.println(Link + "\n" + pagescount.intValue() + "#thread: " + Thread.currentThread().getName());
+                        referencesNumber++;
                     }
                 }
-                else
-                    return;
             }
-            synchronized (newSeed) {
-                newSeed.add(new Link(link.toString(), referencesNumber));
-            }
-            synchronized (crawlerOutput) {
-                crawlerOutput.add(new OutputDoc(link, referencedLinks,referencedImages,doc));
-            }
-            links.remove(link.toString());
-            if (firstIterationCheck == true) {
-                linksSet.remove(link.toString());
-            }
-            pagescount.incrementAndGet();
+            else
+                return;
+        }
+        synchronized (newSeed) {
+            newSeed.add(new Link(link.toString(), referencesNumber));
+        }
+        synchronized (crawlerOutput) {
+            crawlerOutput.add(new OutputDoc(link, referencedLinks,referencedImages,doc));
+        }
+        links.remove(link.toString());
+        if (firstIterationCheck == true) {
+            linksSet.remove(link.toString());
+        }
+        pagescount.incrementAndGet();
 
     }
     public  void CrawlerProcess(int threads ) throws IOException, InterruptedException, URISyntaxException
