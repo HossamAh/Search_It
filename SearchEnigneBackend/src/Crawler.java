@@ -1,15 +1,14 @@
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 //Crawler name is Spider for testing the robots.txt file ,
@@ -38,10 +37,10 @@ public class Crawler {
     {
         URL url;
         Set<String> referencedLinks;
-        Set<image> referencedImages;
+        HashSet<image> referencedImages;
         Document doc;
 
-        public OutputDoc(URL url, Set<String> referencedLinks, Set<image> referencedImages, Document doc) {
+        public OutputDoc(URL url, Set<String> referencedLinks, HashSet<image> referencedImages, Document doc) {
             this.url = url;
             this.referencedLinks = referencedLinks;
             this.referencedImages = referencedImages;
@@ -52,7 +51,7 @@ public class Crawler {
             return referencedImages;
         }
 
-        public void setReferencedImages(Set<image> referencedImages) {
+        public void setReferencedImages(HashSet<image> referencedImages) {
             this.referencedImages = referencedImages;
         }
 
@@ -220,7 +219,7 @@ public class Crawler {
                 return;
             }
             Set<String> referencedLinks = new HashSet<>();
-            Set<image> referencedImages = new HashSet<>();
+            HashSet<image> referencedImages = new HashSet<>();
             int referencesNumber = 0;
             Elements Links = doc.select("a[href]");
             Elements images = doc.select("img");
@@ -233,8 +232,9 @@ public class Crawler {
                 String absoluteUrl = image.absUrl("src");  //absolute URL on src
 //                System.out.println("image SRC:"+absoluteUrl);
 //                System.out.println("image Caption:"+caption);
-
-                referencedImages.add(new image(absoluteUrl,caption));
+                if(!referencedImages.contains(absoluteUrl)) {
+                    referencedImages.add(new image(absoluteUrl, caption));
+                }
             }
 
             for (Element newLink : Links) {

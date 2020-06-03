@@ -1,14 +1,15 @@
-import java.io.*;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.Serializable;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.tartarus.snowball.ext.PorterStemmer;
 
 public class Page implements Serializable {
 

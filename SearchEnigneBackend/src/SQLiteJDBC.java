@@ -1,4 +1,3 @@
-import javax.print.DocFlavor;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
@@ -42,7 +41,7 @@ public class SQLiteJDBC {
 
     private Connection connect = null;
     private Statement statement = null;
-//    private PreparedStatement preparedStatement = null;
+    //    private PreparedStatement preparedStatement = null;
     private ResultSet rs = null;
 
     public void open() throws ClassNotFoundException {
@@ -337,7 +336,7 @@ public class SQLiteJDBC {
             String[] arrOfStr = word.split(" ");
             for (String a : arrOfStr) {
                 rs = statement.executeQuery("SELECT * FROM " + TABLE_NAME3 + " where " + COL_pageID + " = " + id + " and "+
-                COL_word+ " = '"+ a + "';");
+                        COL_word+ " = '"+ a + "';");
                 while (rs.next()) {
                     words.put(rs.getString(COL_word), rs.getInt(COL_count));
                 }

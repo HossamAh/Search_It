@@ -1,7 +1,6 @@
-import java.lang.*;
-import java.io.*;
+import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.HashSet;
 
 public class Manager {
     public static Page.manageDB DB;

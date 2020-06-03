@@ -8,18 +8,24 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.provider.SearchRecentSuggestions;
-import android.view.View;
+import android.util.Log;
+
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.SearchView;
-import android.widget.Toast;
+
+
+import com.example.searchitapp.models.QueryResultItem;
 
 import org.apache.commons.lang3.StringUtils;
 import org.tartarus.snowball.ext.PorterStemmer;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,11 +37,13 @@ import java.util.stream.Stream;
 public class MainActivity extends AppCompatActivity {
     SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this,
             MySuggestionProvider.AUTHORITY, MySuggestionProvider.MODE);
-
+    final List<String>[] pages = new List[]{null};
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
         SearchView mainSearchView= findViewById(R.id.searchView);
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         mainSearchView.setIconifiedByDefault(false);
@@ -46,15 +54,23 @@ public class MainActivity extends AppCompatActivity {
         del_suggestions.setOnClickListener(view -> {
             suggestions.clearHistory();
         });
-        handleIntent(intent,suggestions);
+        try {
+            handleIntent(intent,suggestions);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        handleIntent(intent,suggestions);
+        try {
+            handleIntent(intent,suggestions);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
-    private void handleIntent(Intent intent,SearchRecentSuggestions suggestions) {
+    private void handleIntent(Intent intent,SearchRecentSuggestions suggestions) throws InterruptedException {
 
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
@@ -67,11 +83,9 @@ public class MainActivity extends AppCompatActivity {
         }}
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private void processMyQuery(String query) {
+    private void processMyQuery(String query) throws InterruptedException {
         CheckBox imageSearch=findViewById(R.id.checkBox);
     // query processing
-    /*Toast.makeText(com.example.MainActivity.this,
-    "you typed: "+query, Toast.LENGTH_LONG).show();*/
     List<String> stopwords = Arrays.asList("abroad", "according", "accordingly", "across", "actually", "adj", "after", "afterwards", "again", "against", "ago", "ahead", "ain’t", "all", "allow", "allows",
                 "almost", "alone", "along", "alongside", "already", "also", "although", "always", "am", "amid", "amidst", "among", "amongst", "an", "and", "another", "any", "anybody", "anyhow", "anyone", "anything", "anyway", "anyways", "anywhere", "apart", "appear", "appreciate", "appropriate", "are", "aren’t", "around", "as", "a’s", "aside", "ask", "asking", "associated", "at", "available", "away", "awfully",
                 "back","backward","backwards","be","became","because","become","becomes","becoming","been","before","beforehand","begin","behind","being","believe","below","beside","besides","best","better","between","beyond","both","brief","but","by",
@@ -118,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
         Stemmer S = new Stemmer();
         String stemmed_query=S.stem(result);
         //sending stemmed query to the server
-        final  String IP="192.168.1.3";
+        final  String IP="192.168.194.92";
         final  int port=7800;
         String finalPhrase = phrase;
         String imgSearch="@";
@@ -136,6 +150,8 @@ public class MainActivity extends AppCompatActivity {
                           DOS.writeUTF(stemmed_query+ finalPhrase+"@phrase"+finalImgSearch);
                       else DOS.writeUTF(stemmed_query+"@non"+finalImgSearch);
                    // DOS.writeUTF(stemmed_query);
+                      System.out.println("query sent!");
+                      Log.d("STATE", "query sent!");
                     DOS.flush();
                     DOS.close();
                     S1.close();
@@ -144,19 +160,92 @@ public class MainActivity extends AppCompatActivity {
                   }
                 });
         querySender.start();
-        //Intent intent = new Intent(this, QueryResult.class);
-        Intent intent = new Intent(this, imageResult.class);
-        if(!phrase.isEmpty())
-            intent.putExtra("search_query", stemmed_query+phrase);
-        else intent.putExtra("search_query", stemmed_query);
-        startActivity(intent);
+        querySender.join();
+
+        //ArrayList<QueryResultItem> ResultsList = null;
+        if(finalImgSearch.equals("@yes"))//start image search activity
+        {Thread resultCollector =
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        try {
+                            Socket s = new Socket("192.168.194.92",1700);
+                            Log.d("STATE", "socket established!");
+                            if(pages[0]!=null)
+                                pages[0].clear();
+                            ObjectInputStream is=new ObjectInputStream(s.getInputStream());
+                            pages[0] =(List<String>) is.readObject();
+
+                            s.close();
+
+
+                        } catch (IOException | ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                    }});
+            resultCollector.start();
+            resultCollector.join();
+
+            Intent intent = new Intent(this, imageResult.class);
+            intent.putStringArrayListExtra("imagesResult", (ArrayList<String>) pages[0]);
+            startActivity(intent);
+        }
+        else //start result activity
+        {
+            Thread resultCollector =
+                    new Thread(new Runnable() {
+
+
+                        @Override
+                        public void run() {
+
+                            try {
+                                Socket s = new Socket("192.168.194.92",1700);
+                                Log.d("STATE", "socket established!");
+                                if(pages[0]!=null)
+                                    pages[0].clear();
+                                ObjectInputStream is=new ObjectInputStream(s.getInputStream());
+                                pages[0] =(List<String>) is.readObject();
+                                
+                                s.close();
+
+
+                            } catch (IOException | ClassNotFoundException e) {
+                                e.printStackTrace();
+                            }
+                        }});
+            resultCollector.start();
+            resultCollector.join();
+            Intent intent = new Intent(this, QueryResult.class);
+            ArrayList<String> QueryKeys =new ArrayList<>();
+            String[] keys=(query+finalPhrase).toLowerCase().split(" ");
+            for(int i=0;i<keys.length;i++)
+            {
+                QueryKeys.add(keys[i].toLowerCase());
+            }
+           intent.putStringArrayListExtra("QueryKeys",QueryKeys);
+            intent.putStringArrayListExtra("Results", (ArrayList<String>) pages[0]);
+            startActivity(intent);
+        }
+
+    }
+
+    @Override
+    protected void onRestart() {
+
+        super.onRestart();
+        if(pages[0]!=null)
+            pages[0].clear();
+
+        getIntent().removeExtra("QueryKeys");
+        getIntent().removeExtra("Results");
     }
 }
 
 class Stemmer {
 
     private final static String ILLEGAL_REGEX_PATTERN = "([^a-zA-Z0-9])|(\\b\\d{1}\\b)|(\\b\\w{1}\\b)";
-    private static HashMap<String, Integer> map = new HashMap<>();
 
     public Stemmer(){
         //LoadStopWords();

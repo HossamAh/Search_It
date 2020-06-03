@@ -59,7 +59,7 @@ public class ResultsRecyclerViewAdapter extends RecyclerView.Adapter<ResultsRecy
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder viewHolder, int i) {
-            String str = Results.get(i).getAboutPage();
+            String str = Results.get(i).getAboutPage().toLowerCase();
             SpannableString spannableString = new SpannableString(str);
             for(String Key :QueryKeys)
             {

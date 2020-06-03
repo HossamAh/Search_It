@@ -1,7 +1,6 @@
 import java.util.ArrayList;
+
 import static java.lang.Math.abs;
-import java.util.*;
-import java.net.URL;
 public class Pagerank {
 
     public int numDocs = 0;   //--number of documnets
