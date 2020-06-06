@@ -228,7 +228,7 @@ public class Crawler {
         }
         return;
     }
-//function to extract links and images from specific link.
+    //function to extract links and images from specific link.
     public  void linksExtraction(URL link,Set<String>links) throws IOException, URISyntaxException {
         Document doc;
         try {

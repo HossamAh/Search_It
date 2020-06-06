@@ -128,7 +128,6 @@ public class SQLiteJDBC {
             //store all the images that a page contain in database.
             Hashtable<String,ArrayList<String>> images;
             images = p.getImages();
-            System.out.println("images");
             keys = images.keySet();
             int imageID = 0;
             if(!images.isEmpty()) {
@@ -153,7 +152,6 @@ public class SQLiteJDBC {
                                 "VALUES (?, ?);";
                         pstmt = connect.prepareStatement(sql);
                         pstmt.setInt(1, imageID);
-//                        System.out.println(id+i);
                         pstmt.setString(2, images.get(key).get(j));
                         pstmt.executeUpdate();
                     }
@@ -234,19 +232,17 @@ public class SQLiteJDBC {
         try {
             String[] arrOfStr = query.split(" ");
             for (String a : arrOfStr) {
-                System.out.println(a);
                 rs = statement.executeQuery("SELECT * FROM " +TABLE_NAME6 +" , "+TABLE_NAME5 +" , "+TABLE_NAME1 +" where "+
                         COL_Image_ID + " = " + COL_ImageID_word + " and "+COL_ID+" = "+COL_pageID_image + " and "+ COL_ImageWord + " = '" + a + "';");
                 while (rs.next()) {
                     if(!IDs.contains(rs.getInt(COL_ImageID_word))){
                         IDs.add(rs.getInt(COL_ImageID_word));
-                        System.out.println(rs.getInt(COL_ImageID_word));
                     }
                     if (!images.containsKey(rs.getString(COL_URL))) {
                             images.put(rs.getString(COL_URL), new ArrayList<>());
                         }
                         images.get(rs.getString(COL_URL)).add(new Crawler.image(rs.getString(COL_ABSurl), rs.getString(COL_Caption)));
-                        System.out.println(rs.getString(COL_URL)+"hello");                    
+
                 }
             }
         } catch (Exception e) {
@@ -420,7 +416,6 @@ public class SQLiteJDBC {
         boolean found = false;
         String[] arrOfStr = words.split(" ");
         for (String a : arrOfStr) {
-            System.out.println(a);
             retrievedPages = retrievePages(a);
             for (int i = 0; i < retrievedPages.size(); i++) {
                 for (int j = 0; j < pages.size(); j++) {
