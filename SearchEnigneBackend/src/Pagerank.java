@@ -1,6 +1,7 @@
 import java.util.ArrayList;
-
 import static java.lang.Math.abs;
+import java.util.*;
+import java.net.URL;
 public class Pagerank {
 
     public int numDocs = 0;   //--number of documnets
@@ -47,13 +48,13 @@ public class Pagerank {
                 //--calc page rank
 
                 for(int j=0;j<adjList.get(i).size();j++){
+
                     index = adjList.get(i).get(j);
-                    currentProb[index] += (damping_factor*prevProb[i]/contribution[i]);
-
-
+//                    System.out.println(index +" " +numDocs);
+                    if(index < numDocs) {
+                        currentProb[index] += (damping_factor * prevProb[i] / contribution[i]);
+                    }
                 }
-
-
             }
             //--adding suffer
             for(int i=0;i<numDocs;i++) {
@@ -120,9 +121,14 @@ public class Pagerank {
     }
     public void printPageRank(){
         for(int i=0;i<numDocs;i++){
-            System.out.println(rank[i]);
+//            System.out.println(rank[i]);
         }
     }
+
+    public double[] getRank() {
+        return rank;
+    }
+
     public static void main(String[] args) {
         // TODO Auto-generated method stub
         ArrayList<ArrayList<Integer>> adj = new ArrayList<ArrayList<Integer>>();

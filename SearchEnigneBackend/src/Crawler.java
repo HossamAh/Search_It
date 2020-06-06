@@ -238,6 +238,7 @@ public class Crawler {
             links.remove(link.toString());
             return;
         }
+        String characterFilter = "[^\\p{L}\\p{M}\\p{N}\\p{P}\\p{Z}\\p{Cf}\\p{Cs}\\s]";
         Set<String> referencedLinks = new HashSet<>();
         Set<image> referencedImages = new HashSet<>();
         int referencesNumber = 0;
@@ -253,7 +254,8 @@ public class Crawler {
 //                System.out.println("image SRC:"+absoluteUrl);
 //                System.out.println("image Caption:"+caption);
 
-            referencedImages.add(new image(absoluteUrl,caption));
+            String emotionless = caption.replaceAll(characterFilter,"");
+            referencedImages.add(new image(absoluteUrl,emotionless));
         }
         String robotsTxtURL = normalizeURL(link).toString() + "/robots.txt";
         URL robotstxt = new URL(robotsTxtURL);
