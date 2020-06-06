@@ -12,6 +12,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.example.searchitapp.models.ImageResultItem;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.net.MalformedURLException;
@@ -49,7 +50,17 @@ public class imageResultAdapter extends ArrayAdapter<ImageResultItem> {
         TextView imageCaption = (TextView)v.findViewById(R.id.imageCaption_textView);
         TextView imagePageLink =(TextView)v.findViewById(R.id.PageLink_textView);
 
-        Picasso.with(mContext).load(imageResultItems.get(position).getImageURL()).fit().centerCrop().into(image);
+        Picasso.with(mContext).load(imageResultItems.get(position).getImageURL()).fit().centerCrop().into(image, new Callback() {
+            @Override
+            public void onSuccess() {
+
+            }
+
+            @Override
+            public void onError() {
+                v.setVisibility(View.GONE);
+            }
+        });
         imageCaption.setText(imageResultItems.get(position).getImageCaption());
         try {
             url = new URL(imageResultItems.get(position).getImagePageLink());

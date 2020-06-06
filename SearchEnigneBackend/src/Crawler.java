@@ -20,6 +20,7 @@ public class Crawler {
     private  ArrayList<Thread> ThreadList;
     private ArrayList<ExecutorService> EXList;
     private HashSet<String>alreadyCrawled;
+    private HashSet<String>imagesLinks;
     private  int threadsNumber;
     private  boolean firstIterationCheck=false;
     public  HashSet<OutputDoc> crawlerOutput;
@@ -255,7 +256,10 @@ public class Crawler {
 //                System.out.println("image Caption:"+caption);
 
             String emotionless = caption.replaceAll(characterFilter,"");
-            referencedImages.add(new image(absoluteUrl,emotionless));
+            if(imagesLinks.contains(absoluteUrl)==false) {
+                referencedImages.add(new image(absoluteUrl, emotionless));
+                imagesLinks.add(absoluteUrl);
+            }
         }
         //get robots.txt link from the link host
         String robotsTxtURL = normalizeURL(link).toString() + "/robots.txt";
@@ -333,6 +337,7 @@ public class Crawler {
         pagescount  =new AtomicInteger(0);
         LocksSet = new ArrayList();
         linksSet = new HashSet<String>();
+        imagesLinks = new HashSet<>();
         threadsNumber = threads;
         for(int i =0;i<threadsNumber;i++)
         {
@@ -431,7 +436,7 @@ public class Crawler {
             seedSet.addAll(linksSet);
         }
         newSeed.clear();
-
+        imagesLinks.clear();
 
         System.out.println("end of crawling iteration");
         if(seedSet.size()<1)
