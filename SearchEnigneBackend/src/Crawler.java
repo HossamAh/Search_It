@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 //Crawler name is Spider for testing the robots.txt file ,
 public class Crawler {
-    private   final int PAGES_LIIMIT = 1000;
+    private   final int PAGES_LIIMIT = 5000;
     private  HashSet<String> linksSet;
     public  AtomicInteger pagescount;
     public  ArrayList<Integer> LocksSet;
@@ -71,7 +71,7 @@ public class Crawler {
             this.referencedLinks = referencedLinks;
         }
     }
-
+    // function to terminate the threads pool to recreate another pool
     public void awaitTerminationAfterShutdown(ExecutorService threadPool) {
         threadPool.shutdown();
         try {
@@ -191,7 +191,6 @@ public class Crawler {
                 Iterator<String> itr = links.iterator();
                 if (itr.hasNext()) {
                     URL link = new URL(itr.next());
-
                     try {
                         if(pagescount.intValue()<PAGES_LIIMIT) {
                             boolean alreadyCrawledContain;
@@ -201,6 +200,7 @@ public class Crawler {
                                 alreadyCrawledContain = alreadyCrawled.contains(link.toString());
                             }
                             LinksContain = links.contains(link.toString());
+                            //check if page is exist in set of this thread and not crawled before.
                             if(LinksContain==true && alreadyCrawledContain==false) {
                                 linksExtraction(link, links);
                                 //System.out.println(link.toString() + "\n" + pagescount.intValue() + "#thread: " + Thread.currentThread().getName());
@@ -216,7 +216,6 @@ public class Crawler {
                         if(pagescount.intValue()<PAGES_LIIMIT) {
                             synchronized (linksSet) {
                                 linksSet.remove(link.toString());
-                                //pagescount.decrementAndGet();
                             }
                         }
                         else return;
@@ -228,7 +227,7 @@ public class Crawler {
         }
         return;
     }
-
+//function to extract links and images from specific link.
     public  void linksExtraction(URL link,Set<String>links) throws IOException, URISyntaxException {
         Document doc;
         try {
@@ -247,6 +246,7 @@ public class Crawler {
         for (Element image : images)
         {
             String caption = image.attr("alt");
+            //filter captions .. removing emotions and empty captions
             if(caption == "" ||caption == "..." )
             {
                 caption = doc.title();}
@@ -257,19 +257,21 @@ public class Crawler {
             String emotionless = caption.replaceAll(characterFilter,"");
             referencedImages.add(new image(absoluteUrl,emotionless));
         }
+        //get robots.txt link from the link host
         String robotsTxtURL = normalizeURL(link).toString() + "/robots.txt";
         URL robotstxt = new URL(robotsTxtURL);
         Set<String>NotAllowable=new HashSet<>();
         boolean ConstraintsCheck = false;
         try {
+            // to check if the robots.txt has any constraints for my crawler (all crawlers)
             ConstraintsCheck = parseRobotTxt(robotstxt,NotAllowable);
         } catch (IOException e) {
             ConstraintsCheck = false;
         }
+
         for (Element newLink : Links) {
             if (pagescount.intValue() < PAGES_LIIMIT) {
                 String Link = newLink.attr("abs:href");
-                //Link= UrlCleaner.normalizeUrl(Link);
                 Link = new URI(Link).normalize().toString();
                 Link = Custom_Normalize(Link);
                 URL URLLink = new URL(Link);
@@ -283,6 +285,7 @@ public class Crawler {
                 }
                 if (URLLink != null) {
                     if (linksSetContain == false && links.contains(Link) == false && alreadyCrawledContain ==false && referencedLinks.contains(Link) == false) {
+                        // check if link is not allowed in the robots.txt
                         if (checkLink(URLLink.toString(),NotAllowable) == false && ConstraintsCheck) {
                             continue;
                         }
@@ -294,6 +297,7 @@ public class Crawler {
                                 alreadyCrawledContain=alreadyCrawled.contains(Link);
                             }
                             synchronized (linksSet) {
+                                //add pages to crawled only if it hasn't been already crawled and not in links set
                                 if(linksSet.contains(Link)==false&& alreadyCrawledContain==false) {
                                     linksSet.add(Link);
                                     links.add(Link);
@@ -302,7 +306,6 @@ public class Crawler {
                             }
                         }
                         else return;
-
                         //System.out.println(Link + "\n" + pagescount.intValue() + "#thread: " + Thread.currentThread().getName());
 
                     }
@@ -324,6 +327,7 @@ public class Crawler {
         pagescount.incrementAndGet();
 
     }
+    //main function of crawler
     public  void CrawlerProcess(int threads ) throws IOException, InterruptedException, URISyntaxException
     {
         pagescount  =new AtomicInteger(0);
@@ -339,22 +343,9 @@ public class Crawler {
         crawlerOutput = new HashSet<>();
         alreadyCrawled = new HashSet<>();
         crawlingBase(linksSet);
-        //linksSet.add("http://gutenberg.org");
     }
-//    public static void main(String[] args) throws IOException, InterruptedException, URISyntaxException {
-//        pagescount  =new AtomicInteger(0);
-//        linksSet = new HashSet<String>();
-//        notAllowableURLs = new HashSet<>();
-//        Scanner scanner = new Scanner(System.in);
-//        threadsNumber = scanner.nextInt();
-//        linksSet.add(new URI("https://dmoz-odp.org").normalize().toString());
-//        newSeed = new PriorityQueue<>();
-//        crawlerOutput = new HashSet<>();
-//        crawlingBase(linksSet);
-//        //linksSet.add("http://gutenberg.org");
-//
-//    }
 
+    //base function responsible for creating threads and assign results of seed set to each thread=>set of pages for each thread
     public  void crawlingBase(Set<String> seedSet) throws IOException, URISyntaxException, InterruptedException {
         Iterator<String> itr;
         if(firstIterationCheck ==false && seedSet.size()<threadsNumber) {
@@ -385,7 +376,6 @@ public class Crawler {
             linksSets.add(tempSet);
         }
         linksSet.clear();
-        //ExecutorService es = null;
         if (firstIterationCheck == false) {
             EXList = new ArrayList<>();
         }
@@ -399,11 +389,13 @@ public class Crawler {
             EXList.add(es);
         }
 
-
+        //busy waiting for main thread to wait pages limit.
         while(pagescount.intValue()<PAGES_LIIMIT);
+
 
         Iterator<ExecutorService>i;
         int size = EXList.size();
+        //looping for all threads to ensure that it finished its work and terminate
         for (int k=0;k<size;k++) {
             i=EXList.iterator();
             ExecutorService e = i.next();
@@ -416,8 +408,11 @@ public class Crawler {
 
         }
         firstIterationCheck = true;
+        //clearing crawled pages set to crawl it in the next iteration of crawler
         linksSet.removeAll(alreadyCrawled);
         alreadyCrawled.clear();
+        //check if all pages in links set is already crawled in the previous iteration then use the pages that has
+        // many pages in it.
         if(linksSet.size()<1)
         {
             seedSet.clear();
@@ -431,6 +426,7 @@ public class Crawler {
         }
         else
         {
+            //else make the new seed for crawler is the pages in links set that hasn't been crawled
             seedSet.clear();
             seedSet.addAll(linksSet);
         }
@@ -440,10 +436,13 @@ public class Crawler {
         System.out.println("end of crawling iteration");
         if(seedSet.size()<1)
             seedSet.add((new URI("https://dmoz-odp.org").normalize().toString()));
+        //clear counter to start new iteration.
         pagescount.set(0);
 
         crawlingBase(seedSet);
     }
+
+
     private  class Extraction implements Runnable {
         Set<String> links;
 
