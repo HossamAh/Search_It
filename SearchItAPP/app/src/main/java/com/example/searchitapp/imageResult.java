@@ -26,16 +26,8 @@ public class imageResult extends AppCompatActivity {
         {
             ImageResultItem tempItem1 =new ImageResultItem(imageResultString.get(k),
                     imageResultString.get(k+1),imageResultString.get(k+2));
-            //imageResultItems.add(tempItem1);
             imageResultAdapter.add(tempItem1);
         }
-        /*ImageResultItem imageResultItem = new ImageResultItem("https://i.stack.imgur.com/mc6rV.png","How to get all css properties and events of a html element with jquery or other libraries?","https://stackoverflow.com");
-        for(int i=0;i<10;i++)
-        {
-            imageResultAdapter.add(imageResultItem);
-        }
-
-        imageResultItems =new ArrayList<>();*/
         GridView gridView = (GridView) findViewById(R.id.gridview);
         gridView.setVisibility(View.VISIBLE);
         gridView.post(new Runnable() {

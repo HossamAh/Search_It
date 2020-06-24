@@ -13,11 +13,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 //Crawler name is Spider for testing the robots.txt file ,
 public class Crawler {
-    private   final int PAGES_LIIMIT = 5000;
+    private   final int PAGES_LIMIT = 5000;
     private  HashSet<String> linksSet;
-    public  AtomicInteger pagescount;
+    public  AtomicInteger pagesCount;
     public  ArrayList<Integer> LocksSet;
-    private  ArrayList<Thread> ThreadList;
     private ArrayList<ExecutorService> EXList;
     private HashSet<String>alreadyCrawled;
     private HashSet<String>imagesLinks;
@@ -187,13 +186,13 @@ public class Crawler {
 
         if (links.size() < 1)
             return;
-        while (pagescount.intValue() < PAGES_LIIMIT) {
+        while (pagesCount.intValue() < PAGES_LIMIT) {
             while (!links.isEmpty()){
                 Iterator<String> itr = links.iterator();
                 if (itr.hasNext()) {
                     URL link = new URL(itr.next());
                     try {
-                        if(pagescount.intValue()<PAGES_LIIMIT) {
+                        if(pagesCount.intValue()< PAGES_LIMIT) {
                             boolean alreadyCrawledContain;
                             boolean LinksContain;
                             synchronized (alreadyCrawled)
@@ -214,7 +213,7 @@ public class Crawler {
 
                     } catch (Exception e) {
                         links.remove(link.toString());
-                        if(pagescount.intValue()<PAGES_LIIMIT) {
+                        if(pagesCount.intValue()< PAGES_LIMIT) {
                             synchronized (linksSet) {
                                 linksSet.remove(link.toString());
                             }
@@ -261,6 +260,7 @@ public class Crawler {
                 imagesLinks.add(absoluteUrl);
             }
         }
+
         //get robots.txt link from the link host
         String robotsTxtURL = normalizeURL(link).toString() + "/robots.txt";
         URL robotstxt = new URL(robotsTxtURL);
@@ -274,7 +274,7 @@ public class Crawler {
         }
 
         for (Element newLink : Links) {
-            if (pagescount.intValue() < PAGES_LIIMIT) {
+            if (pagesCount.intValue() < PAGES_LIMIT) {
                 String Link = newLink.attr("abs:href");
                 Link = new URI(Link).normalize().toString();
                 Link = Custom_Normalize(Link);
@@ -294,7 +294,7 @@ public class Crawler {
                             continue;
                         }
                         referencedLinks.add(Link);
-                        if(pagescount.intValue()<PAGES_LIIMIT)
+                        if(pagesCount.intValue()< PAGES_LIMIT)
                         {
                             synchronized (alreadyCrawled)
                             {
@@ -328,13 +328,12 @@ public class Crawler {
         if (firstIterationCheck == true) {
             linksSet.remove(link.toString());
         }
-        pagescount.incrementAndGet();
-
+        pagesCount.incrementAndGet();
     }
     //main function of crawler
-    public  void CrawlerProcess(int threads ) throws IOException, InterruptedException, URISyntaxException
+    public  void CrawlerProcess(int threads) throws IOException, InterruptedException, URISyntaxException
     {
-        pagescount  =new AtomicInteger(0);
+        pagesCount =new AtomicInteger(0);
         LocksSet = new ArrayList();
         linksSet = new HashSet<String>();
         imagesLinks = new HashSet<>();
@@ -358,7 +357,7 @@ public class Crawler {
                 itr = seedSet.iterator();
                 if (itr.hasNext()) {
                     linksExtraction(new URL(itr.next()), seedSet);
-                    pagescount.incrementAndGet();
+                    pagesCount.incrementAndGet();
                 }
             }
         }
@@ -395,7 +394,7 @@ public class Crawler {
         }
 
         //busy waiting for main thread to wait pages limit.
-        while(pagescount.intValue()<PAGES_LIIMIT);
+        while(pagesCount.intValue()< PAGES_LIMIT);
 
 
         Iterator<ExecutorService>i;
@@ -442,7 +441,7 @@ public class Crawler {
         if(seedSet.size()<1)
             seedSet.add((new URI("https://dmoz-odp.org").normalize().toString()));
         //clear counter to start new iteration.
-        pagescount.set(0);
+        pagesCount.set(0);
 
         crawlingBase(seedSet);
     }
