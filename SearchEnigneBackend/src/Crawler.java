@@ -6,6 +6,7 @@ import org.jsoup.select.Elements;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.stream.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -343,6 +344,9 @@ public class Crawler {
             LocksSet.add(0);
         }
         linksSet.add(new URI("https://dmoz-odp.org").normalize().toString());
+        linksSet.add(new URI("https://www.wikipedia.org").normalize().toString());
+        linksSet.add(new URI("http://gutenberg.org").normalize().toString());
+
         newSeed = new PriorityQueue<>();
         crawlerOutput = new HashSet<>();
         alreadyCrawled = new HashSet<>();
@@ -351,14 +355,15 @@ public class Crawler {
 
     //base function responsible for creating threads and assign results of seed set to each thread=>set of pages for each thread
     public  void crawlingBase(Set<String> seedSet) throws IOException, URISyntaxException, InterruptedException {
-        Iterator<String> itr;
+        List<String> tempSeed;
+        Iterator<String>itr;
         if(firstIterationCheck ==false && seedSet.size()<threadsNumber) {
-            while (seedSet.size() < threadsNumber) {
-                itr = seedSet.iterator();
-                if (itr.hasNext()) {
-                    linksExtraction(new URL(itr.next()), seedSet);
-                    pagesCount.incrementAndGet();
-                }
+            tempSeed =List.copyOf(seedSet);
+            int i=0;
+            while (seedSet.size() < threadsNumber||i<tempSeed.size()) {
+                linksExtraction(new URL(tempSeed.get(i)), seedSet);
+                pagesCount.incrementAndGet();
+                i++;
             }
         }
         ArrayList<Set<String>> linksSets = new ArrayList<>();
