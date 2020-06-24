@@ -67,7 +67,6 @@ public class Manager {
                                 processedCrawledPages +=1;
                                 DB.docProcess(output);
                                 synchronized (crawlerOutput) {
-                                    System.out.println(output.url);
                                     crawlerOutput.remove(output);
                                 }
                             }

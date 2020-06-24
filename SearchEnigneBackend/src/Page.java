@@ -94,20 +94,18 @@ public class Page implements Serializable {
         wordCount=0;
         String text = title+" "+description;
 
-        //System.out.println("after removing stop words "+text);
+
         ///////////////////////////////////stop words////////////////////////////////////
         //String query = "mu name is a fish who can sleep at night it means beautiful world will alwyas be beautiful";
         ArrayList<String> allWords = Stream.of(text.toLowerCase().split(" "))
                 .collect(Collectors.toCollection(ArrayList<String>::new));
         allWords.removeAll(stopwords);
         String result = allWords.stream().collect(Collectors.joining(" "));
-        //System.out.println("after removing stop words "+result);
         ///////////////////////////////////stop words///////////////////////////////////
 
         ///////////////////////////////////punctuation//////////////////////////////////
         //String st = "hey, you, yes, you?";
         String stu =  result.replaceAll("[^a-zA-Z ]", "");
-        //System.out.println("after removing punc."+stu);
         ///////////////////////////////////punctuation//////////////////////////////////
 
         PorterStemmer porterStemmer = new PorterStemmer();
@@ -120,7 +118,6 @@ public class Page implements Serializable {
             String stem = porterStemmer.getCurrent();
             if (stemy) {
                 if(!stem.equals("")){
-                    //System.out.println("The stem of " + word + " is " + stem);
                     if (words.containsKey(stem)) {
                         j = words.get(stem);
                         j++;
@@ -131,7 +128,6 @@ public class Page implements Serializable {
                 }
             }
             else {
-                //System.out.println(word);
                 if (words.containsKey(word)) {
                     j = words.get(word);
                     j++;
@@ -147,7 +143,6 @@ public class Page implements Serializable {
 
         ArrayList<String> allWords = Stream.of(img.imageCaption.toLowerCase().split(" "))
                 .collect(Collectors.toCollection(ArrayList<String>::new));
-        System.out.println(img.imageCaption);
         allWords.removeAll(stopwords);
         ArrayList<String>str = new ArrayList<>();
         str.add(img.imageCaption);
@@ -168,7 +163,6 @@ public class Page implements Serializable {
                 if(!stem.equals("")){
                     if(!str.contains(stem)){
                         str.add(stem);
-                        System.out.println(stem);
                     }
                 }
             }

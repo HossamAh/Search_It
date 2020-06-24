@@ -27,16 +27,11 @@ public class manageDB{
         Set<String> links = crawlerOutput.referencedLinks ;
 
         t.setImages(rImages);
-        System.out.println("finish fucking 1");
         t.metaData();
-        System.out.println("finish fucking 2");
         t.ExtractWords();
-        System.out.println("finish fucking 3");
         t.setLinksSet(links);
         t.setPop(-111111111.0);
-        System.out.println("finish fucking 4");
         DB.createPage(t);
-        System.out.println("finish fucking 6");
     }
 
     //search for image then send them.
@@ -125,7 +120,6 @@ public class manageDB{
                 pagess.add(ranked.get(i).getURL());
                 pagess.add(ranked.get(i).getDescription());
             }
-            System.out.println("end of create");
         }
         //Server will be started on 1700 port number
         ServerSocket server=new ServerSocket(1700);
