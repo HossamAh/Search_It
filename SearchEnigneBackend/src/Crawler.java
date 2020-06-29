@@ -218,7 +218,7 @@ public class Crawler {
                             //check if page is exist in set of this thread and not crawled before.
                             if(LinksContain==true && alreadyCrawledContain==false) {
                                 linksExtraction(link, links);
-                                System.out.println(link.toString() + "\n" + pagesCount.intValue() + "#thread: " + Thread.currentThread().getName());
+                                //System.out.println(link.toString() + "\n" + pagesCount.intValue() + "#thread: " + Thread.currentThread().getName());
                                 synchronized (alreadyCrawled) {
                                     alreadyCrawled.add(link.toString());
                                 }
@@ -367,7 +367,6 @@ public class Crawler {
         }
         linksSet.add(new URI("https://dmoz-odp.org").normalize().toString());
         linksSet.add(new URI("https://wikipedia.org").normalize().toString());
-        //linksSet.add(new URI("http://gutenberg.org").normalize().toString());
 
         newSeed = new PriorityQueue<>();
         crawlerOutput = new HashSet<>();
@@ -466,8 +465,7 @@ public class Crawler {
         System.out.println("end of crawling iteration");
         if(seedSet.size()<1) {
             seedSet.add((new URI("https://dmoz-odp.org").normalize().toString()));
-            seedSet.add(new URI("https://www.wikipedia.org").normalize().toString());
-            //seedSet.add(new URI("http://gutenberg.org").normalize().toString());
+            seedSet.add(new URI("https://wikipedia.org").normalize().toString());
         }
         //clear counter to start new iteration.
         pagesCount.set(0);
