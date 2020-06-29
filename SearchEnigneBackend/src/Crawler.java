@@ -203,9 +203,15 @@ public class Crawler {
             while (!links.isEmpty()){
                 if(links.size()>1){
                     Random rand = new Random(); //instance of random class
-                    //generate random values from 0-links set size
-                    int int_random = rand.nextInt(links.size());
-                    URL link = new URL((String) links.toArray()[int_random]);
+//                    //generate random values from 0-links set size
+//                    int int_random = rand.nextInt(links.size());
+//                    URL link = new URL((String) links.toArray()[int_random]);
+                    int index = rand.nextInt(links.size());
+                    Iterator<String> iter = links.iterator();
+                    for (int i = 0; i < index; i++) {
+                        iter.next();
+                    }
+                    URL link = new URL(iter.next().toString());
                     try {
                         if(pagesCount.intValue()< PAGES_LIMIT) {
                             boolean alreadyCrawledContain;
@@ -218,7 +224,7 @@ public class Crawler {
                             //check if page is exist in set of this thread and not crawled before.
                             if(LinksContain==true && alreadyCrawledContain==false) {
                                 linksExtraction(link, links);
-                                //System.out.println(link.toString() + "\n" + pagesCount.intValue() + "#thread: " + Thread.currentThread().getName());
+                                System.out.println(link.toString() + "\n" + pagesCount.intValue() + "#thread: " + Thread.currentThread().getName());
                                 synchronized (alreadyCrawled) {
                                     alreadyCrawled.add(link.toString());
                                 }
@@ -354,17 +360,12 @@ public class Crawler {
     public  void CrawlerProcess(int threads) throws IOException, InterruptedException, URISyntaxException
     {
         pagesCount =new AtomicInteger(0);
-        LocksSet = new ArrayList();
         linksSet = new HashSet<String>();
         imagesLinks = new HashSet<>();
         String[] languages=Locale.getISOLanguages();
         languageCodes=Arrays.asList(languages);
 
         threadsNumber = threads;
-        for(int i =0;i<threadsNumber;i++)
-        {
-            LocksSet.add(0);
-        }
         linksSet.add(new URI("https://dmoz-odp.org").normalize().toString());
         linksSet.add(new URI("https://wikipedia.org").normalize().toString());
 
