@@ -24,6 +24,7 @@ public class Crawler {
     private  int threadsNumber;
     private  boolean firstIterationCheck=false;
     public  HashSet<OutputDoc> crawlerOutput;
+    private List<String>languageCodes;
     public static class image
     {
         String imageSrc;
@@ -108,7 +109,7 @@ public class Crawler {
         }
     }
     private  PriorityQueue<Link> newSeed;
-    public  String Custom_Normalize(String Link) throws MalformedURLException {
+    public  Boolean Custom_Normalize(String Link) throws MalformedURLException {
 
         if(Link.endsWith("/"))
         {
@@ -123,7 +124,16 @@ public class Crawler {
         {
             Link=Link.replace("http","https");
         }
-        return Link;
+        if(Link.indexOf(".")<16)
+        {
+            if(!(Link.substring(0,16).contains("//m.")||Link.substring(0,16).contains("//en.")||Link.substring(0,16).contains("//ar.")))
+            {
+                String langSection=Link.substring(8,Link.indexOf(".")+1);
+                Link=Link.replace(langSection,"");
+                return false;
+            }
+        }
+        return true;
     }
 
     //function to get host url to check the host robot.txt file
@@ -140,7 +150,7 @@ public class Crawler {
         for (String link :NotAllowableURLs)
         {
             if(!link.equals("")) {
-                if (Url.contains(link))
+                if (Url.toLowerCase().contains(link.toLowerCase()))
                     return false;
             }
         }
@@ -177,7 +187,9 @@ public class Crawler {
             }
             else if(line.startsWith("Disallow: ") && myConstraintsCheck)
             {
-                notAllowable.add((line.split("Disallow: "))[1].replaceAll("/*",""));
+                String Disallowable =(line.split("Disallow: "))[1].replaceAll("/*","");
+                if(Disallowable.length()>2)
+                    notAllowable.add(Disallowable);
             }
         }
         return myConstraintsCheck;
@@ -189,9 +201,11 @@ public class Crawler {
             return;
         while (pagesCount.intValue() < PAGES_LIMIT) {
             while (!links.isEmpty()){
-                Iterator<String> itr = links.iterator();
-                if (itr.hasNext()) {
-                    URL link = new URL(itr.next());
+                if(links.size()>1){
+                    Random rand = new Random(); //instance of random class
+                    //generate random values from 0-links set size
+                    int int_random = rand.nextInt(links.size());
+                    URL link = new URL((String) links.toArray()[int_random]);
                     try {
                         if(pagesCount.intValue()< PAGES_LIMIT) {
                             boolean alreadyCrawledContain;
@@ -204,10 +218,14 @@ public class Crawler {
                             //check if page is exist in set of this thread and not crawled before.
                             if(LinksContain==true && alreadyCrawledContain==false) {
                                 linksExtraction(link, links);
-                                //System.out.println(link.toString() + "\n" + pagescount.intValue() + "#thread: " + Thread.currentThread().getName());
+                                System.out.println(link.toString() + "\n" + pagesCount.intValue() + "#thread: " + Thread.currentThread().getName());
                                 synchronized (alreadyCrawled) {
                                     alreadyCrawled.add(link.toString());
                                 }
+                                synchronized (linksSet) {
+                                    linksSet.remove(link.toString());
+                                }
+                                links.remove(link.toString());
                             }
                         }
                         else return;
@@ -278,7 +296,8 @@ public class Crawler {
             if (pagesCount.intValue() < PAGES_LIMIT) {
                 String Link = newLink.attr("abs:href");
                 Link = new URI(Link).normalize().toString();
-                Link = Custom_Normalize(Link);
+                //to normalize link and check if it is different language link.
+                boolean redundancyCheck = Custom_Normalize(Link);
                 URL URLLink = new URL(Link);
                 boolean linksSetContain;
                 boolean alreadyCrawledContain;
@@ -288,7 +307,7 @@ public class Crawler {
                 synchronized (alreadyCrawled){
                     alreadyCrawledContain = alreadyCrawled.contains(Link);
                 }
-                if (URLLink != null) {
+                if (URLLink != null &&redundancyCheck==true) {
                     if (linksSetContain == false && links.contains(Link) == false && alreadyCrawledContain ==false && referencedLinks.contains(Link) == false) {
                         // check if link is not allowed in the robots.txt
                         if (checkLink(URLLink.toString(),NotAllowable) == false && ConstraintsCheck) {
@@ -338,14 +357,17 @@ public class Crawler {
         LocksSet = new ArrayList();
         linksSet = new HashSet<String>();
         imagesLinks = new HashSet<>();
+        String[] languages=Locale.getISOLanguages();
+        languageCodes=Arrays.asList(languages);
+
         threadsNumber = threads;
         for(int i =0;i<threadsNumber;i++)
         {
             LocksSet.add(0);
         }
         linksSet.add(new URI("https://dmoz-odp.org").normalize().toString());
-        linksSet.add(new URI("https://www.wikipedia.org").normalize().toString());
-        linksSet.add(new URI("http://gutenberg.org").normalize().toString());
+        linksSet.add(new URI("https://wikipedia.org").normalize().toString());
+        //linksSet.add(new URI("http://gutenberg.org").normalize().toString());
 
         newSeed = new PriorityQueue<>();
         crawlerOutput = new HashSet<>();
@@ -362,7 +384,6 @@ public class Crawler {
             int i=0;
             while (seedSet.size() < threadsNumber||i<tempSeed.size()) {
                 linksExtraction(new URL(tempSeed.get(i)), seedSet);
-                pagesCount.incrementAndGet();
                 i++;
             }
         }
@@ -443,8 +464,11 @@ public class Crawler {
         imagesLinks.clear();
 
         System.out.println("end of crawling iteration");
-        if(seedSet.size()<1)
+        if(seedSet.size()<1) {
             seedSet.add((new URI("https://dmoz-odp.org").normalize().toString()));
+            seedSet.add(new URI("https://www.wikipedia.org").normalize().toString());
+            //seedSet.add(new URI("http://gutenberg.org").normalize().toString());
+        }
         //clear counter to start new iteration.
         pagesCount.set(0);
 
