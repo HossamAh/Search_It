@@ -14,7 +14,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 //Crawler name is Spider for testing the robots.txt file ,
 public class Crawler {
-    private   final int PAGES_LIMIT = 5000;
+    private static int iterationNumber=0;
+    private   final int PAGES_LIMIT = 1000;
     private  HashSet<String> linksSet;
     public  AtomicInteger pagesCount;
     public  ArrayList<Integer> LocksSet;
@@ -440,7 +441,14 @@ public class Crawler {
         firstIterationCheck = true;
         //clearing crawled pages set to crawl it in the next iteration of crawler
         linksSet.removeAll(alreadyCrawled);
-        alreadyCrawled.clear();
+        if(iterationNumber==5) {
+            alreadyCrawled.clear();
+            iterationNumber=0;
+        }
+        else
+            {
+                iterationNumber++;
+            }
         //check if all pages in links set is already crawled in the previous iteration then use the pages that has
         // many pages in it.
         if(linksSet.size()<1)
