@@ -6,16 +6,19 @@ import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Manager {
     public static manageDB DB;
     private static HashSet<Crawler.OutputDoc> crawlerOutput;
     private static long processedCrawledPages;
     private static HashSet<Crawler.OutputDoc> outputSection;
+    public static AtomicInteger DBLock;
     public static void main(String[] arg) throws IOException, URISyntaxException, InterruptedException {
         //crawlerOutput = new HashSet<>();
         DB = new manageDB();
         Crawler crawler = new Crawler();
+        DBLock=new AtomicInteger(0);
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -52,6 +55,8 @@ public class Manager {
                                 }
                                 if(processedCrawledPages%10==0)
                                 {
+                                    //lock db to be exclusive for POP function
+                                    DBLock.set(1);
                                     processedCrawledPages=0;
                                     try {
                                         Thread popThread=new Thread(new POPClass(outputSection));
@@ -62,8 +67,9 @@ public class Manager {
                                         e.printStackTrace();
                                     }
                                     outputSection.clear();
+                                    
                                 }
-
+                                while(DBLock.intValue()==1);
                                 processedCrawledPages +=1;
                                 DB.docProcess(output);
                                 synchronized (crawlerOutput) {
@@ -143,6 +149,7 @@ public class Manager {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            DBLock.set(0);
         }
     }
 }
