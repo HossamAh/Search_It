@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.provider.SearchRecentSuggestions;
+import android.provider.SearchRecentSuggestions;
 import android.util.Log;
 
 import android.widget.Button;
@@ -17,7 +18,7 @@ import android.widget.CheckBox;
 import android.widget.SearchView;
 
 
-import com.example.searchitapp.models.QueryResultItem;
+
 
 import org.apache.commons.lang3.StringUtils;
 import org.tartarus.snowball.ext.PorterStemmer;
@@ -164,13 +165,13 @@ public class MainActivity extends AppCompatActivity {
 
         //ArrayList<QueryResultItem> ResultsList = null;
         if(finalImgSearch.equals("@yes"))//start image search activity
-        {Thread resultCollector =
-                new Thread(new Runnable() {
+        {
+            Thread resultCollector = new Thread(new Runnable() {
                     @Override
                     public void run() {
-
                         try {
-                            Socket s = new Socket("192.168.194.92",1700);
+
+                            Socket s = new Socket(IP,1700);
                             Log.d("STATE", "socket established!");
                             if(pages[0]!=null)
                                 pages[0].clear();
@@ -180,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
                             s.close();
 
 
-                        } catch (IOException | ClassNotFoundException e) {
+                        } catch (IOException | ClassNotFoundException  e) {
                             e.printStackTrace();
                         }
                     }});
@@ -201,7 +202,7 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
 
                             try {
-                                Socket s = new Socket("192.168.194.92",1700);
+                                Socket s = new Socket(IP,1700);
                                 Log.d("STATE", "socket established!");
                                 if(pages[0]!=null)
                                     pages[0].clear();
